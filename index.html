@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://pagead2.googlesyndication.com https://adservice.google.com https://www.googletagservices.com https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googleadservices.com https://*.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; media-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https: wss:; frame-src 'self' https://*.googlesyndication.com https://tpc.googlesyndication.com https://*.doubleclick.net https://www.google.com https://googleads.g.doubleclick.net https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="color-scheme" content="dark">
+    <title>HC Values | by cyxo</title>
+    <meta name="description" content="Most Accurate HC Values.">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9960036831034625" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css?v=2.6">
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorBox = document.getElementById('roblox-modal-error');
+            if (errorBox) {
+                errorBox.textContent = `Error: ${message} (Line ${lineno})`;
+                errorBox.style.display = 'block';
+            }
+            return false;
+        };
+        window.onunhandledrejection = function(event) {
+            const errorBox = document.getElementById('roblox-modal-error');
+            if (errorBox) {
+                errorBox.textContent = `Error: ${event.reason}`;
+                errorBox.style.display = 'block';
+            }
+        };
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && ['s','p','u','c','i','j','k','a','d'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+            }
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+                e.preventDefault();
+            }
+        });
+        document.addEventListener('dragstart', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('mousedown', e => {
+            if (e.button === 2) e.preventDefault();
+        });
+        window.addEventListener('beforeunload', () => {
+            document.body.style.visibility = 'hidden';
+        });
+        document.querySelectorAll('img').forEach(img => {
+            img.setAttribute('draggable', 'false');
+            img.setAttribute('loading', 'eager');
+        });
+    </script>
+    <!-- ── FIXED NAV (always on top) ──────────────────────── -->
+    <header id="global-nav">
+        <div class="nav-inner">
+            <a class="nav-logo" href="#" id="nav-home-logo">HC Values</a>
+            <div class="nav-separator"></div>
+            <nav class="nav-links">
+                <a href="#" class="nav-link active" id="navlink-home">Home</a>
+                <a href="#" class="nav-link" id="navlink-values">Values</a>
+                <a href="#" class="nav-link" id="navlink-exclusive">Exclusive</a>
+                <a href="https://www.roblox.com/share?code=dc8105db6038374e83b43a7ef874780a&type=Server" target="_blank" rel="noopener noreferrer" class="nav-link" id="navlink-trading-server" style="color: #a259ff;">Trading Server</a>
+                <a href="#" class="nav-link" id="navlink-prices" style="display:none; color: #4ade80;">Prices</a>
+                <a href="#" class="nav-link" id="navlink-admin" style="display:none; color:var(--accent);">Admin View</a>
+                <div class="nav-underline" id="nav-underline"></div>
+            </nav>
+            <div class="nav-user-area" id="nav-user-area">
+                <!-- Will be dynamically populated by script.js -->
+            </div>
+        </div>
+    </header>
+    <!-- ── HORIZONTAL SLIDE WRAPPER ───────────────────────── -->
+    <div id="page-wrapper" style="display:none;">
+        <!-- ═══ LEFT PANEL: Home + Values ═══ -->
+        <div id="left-panel">
+            <section id="landing">
+                <!-- Google Ad Banner (Left Sidebar) -->
+                <div class="left-ad-banner">
+                    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9960036831034625"
+                         crossorigin="anonymous"></script>
+                    <!-- Mainscreen -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-9960036831034625"
+                         data-ad-slot="1573616287"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                <div class="hero-content">
+                    <h1 id="site-title">HC Values</h1>
+                    <p class="hero-sub">The definitive skin value guide. Every item, every price.</p>
+                    <button id="discover-btn">
+                        <span>Discover Values</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12l7 7 7-7" />
+                        </svg>
+                    </button>
+                </div>
+            </section>
+            <div id="catalog">
+                <main>
+                    <section id="categories-section">
+                        <div class="section-header" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between;">
+                            <div>
+                                <h2>All Values</h2>
+                                <p>Select a category or search to browse every skin</p>
+                            </div>
+                            <div class="search-wrap" style="flex:1; min-width: 250px; max-width: 400px;">
+                                <input type="text" id="global-search" class="search-input" placeholder="Search across all categories..." autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="category-nav-wrap">
+                            <div class="category-nav" id="category-nav"></div>
+                        </div>
+                    </section>
+                    <!-- On Demand (auto-shown) -->
+                    <section id="trending-section">
+                        <div class="section-header">
+                            <h2 class="trending-heading">
+                                <svg class="flame-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15z" />
+                                </svg>
+                                On Demand
+                            </h2>
+                        </div>
+                        <div id="trending-grid" class="items-grid-inner"></div>
+                    </section>
+                    <!-- Selected Category Items -->
+                    <section id="items-section" style="display:none;">
+                        <div class="section-header" id="items-header">
+                            <h2 id="current-category-title"></h2>
+                            <p id="items-count-label"></p>
+                        </div>
+                        <div id="items-grid"></div>
+                    </section>
+                    <!-- Admin Section -->
+                    <section id="admin-section" style="display:none;">
+                        <div class="section-header">
+                            <h2>Admin Dashboard</h2>
+                            <p>Manage site data and view traffic</p>
+                        </div>
+                        <div class="admin-stats-row-3">
+                            <div class="stat-card">
+                                <h3>Total Visits</h3>
+                                <div id="total-clicks">0</div>
+                                <div class="stat-card-sub" id="stat-sub-total">all time</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Today</h3>
+                                <div id="stat-today">0</div>
+                                <div class="stat-card-sub" id="stat-sub-today">visits today</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Last 7 Days</h3>
+                                <div id="stat-week">0</div>
+                                <div class="stat-card-sub">this week</div>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-chart">
+                            <div class="chart-header">
+                                <h3>Daily Traffic — Last 14 Days</h3>
+                                <div class="chart-legend">
+                                    <span class="legend-dot today"></span><span>Today</span>
+                                    <span class="legend-dot past"></span><span>Past</span>
+                                </div>
+                            </div>
+                            <div id="traffic-chart" class="chart-container"></div>
+                            <div id="chart-tooltip" class="chart-tooltip"></div>
+                        </div>
+                        <div class="admin-controls">
+                            <!-- Left: Edit Panel -->
+                            <div class="admin-panel-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                                    <h3>Edit Skin Prices</h3>
+                                    <select id="admin-edit-cat-select" class="admin-select-sm"></select>
+                                </div>
+                                <div class="admin-search-wrap">
+                                    <input type="text" id="admin-skin-search" placeholder="Search skin name...">
+                                </div>
+                                <div id="admin-edit-grid" class="admin-grid"></div>
+                            </div>
+                            <!-- Right: Add Panel -->
+                            <div class="admin-panel-card">
+                                <h3>Add New Skin</h3>
+                                <div class="admin-form">
+                                    <label class="val-label" style="margin-bottom:0.5rem; display:block;">Select Category</label>
+                                    <select id="add-skin-cat"></select>
+                                    <label class="val-label" style="margin-bottom:0.5rem; display:block; margin-top:1rem;">Skin Details</label>
+                                    <input type="text" id="add-skin-name" placeholder="Skin Name">
+                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                                        <input type="text" id="add-skin-usd" placeholder="USD Price">
+                                        <input type="text" id="add-skin-robux" placeholder="Robux Price">
+                                    </div>
+                                    <button id="btn-add-skin" class="preview-btn" style="width:100%; margin-top:1.5rem; height:50px; font-weight:700;">Create New Skin</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <!-- Blocklist Panel -->
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Manage Blocklist</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem;">Blocked users will not be able to log in or see the site content.</p>
+                                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                    <input type="text" id="admin-block-input" placeholder="Enter User ID to Block" style="flex: 1; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.8rem;">
+                                    <button id="admin-btn-block" class="preview-btn" style="padding: 0 1.5rem; border-radius: 6px;">Block User</button>
+                                </div>
+                                <div id="admin-blocklist-grid" class="admin-grid" style="margin-top: 1.5rem; max-height: 300px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <!-- Active Sessions Panel -->
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Connected Users</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem;">List of all currently connected Roblox users.</p>
+                                <div id="admin-sessions-grid" class="admin-grid" style="margin-top: 1.5rem; max-height: 300px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Lookup Skin Votes by Category</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem;">Select a category to view all its skins, sorted by price (high to low) with full vote breakdowns.</p>
+                                <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; margin-top:1rem;">
+                                    <select id="admin-skin-select" style="flex:1; min-width:220px; border-radius:8px; border:1px solid var(--border); background:var(--bg-1); color:var(--text-1); padding:0.75rem 1rem; font-family:inherit; font-size:0.9rem; outline:none; appearance:none; cursor:pointer;"></select>
+                                    <button id="admin-skin-refresh-btn" class="preview-btn" style="padding:0.75rem 1.25rem; border-radius:8px; height:46px;">↻ Refresh</button>
+                                </div>
+                                <div id="admin-skin-vote-results" style="margin-top:1.25rem; min-height:80px; display:flex; flex-direction:column; gap:0.75rem;"></div>
+                            </div>
+                        </div>
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <!-- Voted Skins Categorized & Price Sorted Panel -->
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Voted Skins Categorized (Price: High to Low)</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem;">View all skins that have received community votes, grouped by category and sorted from highest to lowest price.</p>
+                                <button id="admin-btn-load-all-skins" class="preview-btn" style="width:100%; margin-top:1rem; padding:0.85rem 1.25rem; border-radius:8px; height:48px;">Load Voted Skins</button>
+                                <div id="admin-all-skins-results" style="margin-top:1.25rem; min-height:110px; display:flex; flex-direction:column; gap:1.25rem; max-height:600px; overflow-y:auto;"></div>
+                            </div>
+                        </div>
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <!-- Prices Whitelist Panel -->
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Manage Prices Access</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem;">Roblox accounts added to this list will see the Prices tab and can suggest new values.</p>
+                                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                    <input type="text" id="admin-prices-input" placeholder="Enter Roblox Username or User ID" style="flex: 1; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.8rem;">
+                                    <button id="admin-btn-add-prices" class="preview-btn" style="padding: 0 1.5rem; border-radius: 6px;">Add User</button>
+                                </div>
+                                <div id="admin-prices-whitelist-grid" class="admin-grid" style="margin-top: 1.5rem; max-height: 300px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                        <!-- Trending Items Manager -->
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Manage Most Trending</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem;">These items appear in the Most Trending section at the top of the values page.</p>
+                                <div style="display: flex; gap: 1rem; margin-top: 1.2rem; flex-wrap: wrap; align-items: flex-end;">
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 1; min-width: 160px; position: relative;">
+                                        <label style="font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em;">Category</label>
+                                        <input type="text" id="trending-cat-input" placeholder="e.g. Knives" autocomplete="off"
+                                            style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem;">
+                                        <div id="trending-cat-suggestions" class="trending-suggestions" style="display:none;"></div>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 2; min-width: 200px; position: relative;">
+                                        <label style="font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em;">Skin Name</label>
+                                        <input type="text" id="trending-name-input" placeholder="e.g. Beta" autocomplete="off"
+                                            style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem;">
+                                        <div id="trending-name-suggestions" class="trending-suggestions" style="display:none;"></div>
+                                    </div>
+                                    <button id="trending-add-btn" class="preview-btn" style="padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.85rem; height: 46px; margin-bottom: 0;">
+                                        + Add
+                                    </button>
+                                </div>
+                                <div id="admin-trending-list" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <!-- Site Settings Panel -->
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Site Settings</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem; margin-bottom: 1.2rem;">
+                                    Configure global links and options for the website.
+                                </p>
+                                <div class="admin-form">
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                                        <label class="val-label">Roblox Trading Server Link</label>
+                                        <input type="text" id="admin-trading-server-input" placeholder="https://www.roblox.com/share?code=..." 
+                                            style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <button id="admin-btn-save-settings" class="preview-btn" style="width:100%; margin-top: 1.5rem; height: 48px; font-weight: 700;">Save Settings</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-controls" style="margin-top: 2rem;">
+                            <!-- Discord Verification Settings Panel -->
+                            <div class="admin-panel-card" style="width: 100%;">
+                                <h3>Discord Verification Settings</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem; margin-bottom: 1.2rem;">
+                                    Configure required Discord server membership and verification options.
+                                </p>
+                                <div class="admin-form">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem;">
+                                        <div>
+                                            <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-1);">Require Discord Verification</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-3);">Enforce Discord connection and server membership check for site access.</div>
+                                        </div>
+                                        <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                                            <input type="checkbox" id="admin-discord-enabled-checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                                            <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); border: 1px solid var(--border); transition: .3s; border-radius: 24px;"></span>
+                                        </label>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                                        <label class="val-label">Required Discord Server (Guild ID)</label>
+                                        <input type="text" id="admin-discord-guild-id-input" placeholder="e.g. 1405216941383094376" 
+                                            style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem;">
+                                        <label class="val-label">Discord Invite Link</label>
+                                        <input type="text" id="admin-discord-invite-link-input" placeholder="https://discord.com/invite/zJMVj8yE9U" 
+                                            style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem; width: 100%; box-sizing: border-box;">
+                                    </div>
+                                    <div id="admin-discord-env-status" style="margin-top: 1rem; font-size: 0.8rem; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--text-2);">
+                                        Checking OAuth environment credentials status...
+                                    </div>
+                                    <button id="admin-btn-save-discord-settings" class="preview-btn" style="width:100%; margin-top: 1.5rem; height: 48px; font-weight: 700;">Save Discord Settings</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Prices Section -->
+                    <section id="prices-section" style="display:none;">
+                        <div class="section-header">
+                            <h2>Gun Skin Prices</h2>
+                            <p>Suggest new prices for gun skins or approve pending suggestions</p>
+                        </div>
+                        
+                        <div class="prices-layout" id="prices-content-wrapper">
+                            <!-- Left Column: Suggestion Panel & Queues -->
+                            <div class="prices-main-column">
+                                <!-- Suggestion Form Panel (Visible to everyone with access) -->
+                                <div class="admin-panel-card" id="prices-suggest-panel" style="display:none; width: 100%;">
+                                    <h3>Suggest a Price</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                                        Search for any gun skin from the catalog, enter a suggested price in USD, and submit it for approval.
+                                    </p>
+                                    <div class="admin-form">
+                                        <div style="display: flex; flex-direction: column; gap: 0.4rem; position: relative;">
+                                            <label class="val-label">Search Skin Name</label>
+                                            <input type="text" id="suggest-skin-input" placeholder="e.g. Lightbringer" autocomplete="off"
+                                                style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem; width: 100%;">
+                                            <div id="suggest-skin-suggestions" class="trending-suggestions" style="display:none; top: 100%; width: 100%; box-sizing: border-box; z-index: 10;"></div>
+                                        </div>
+                                        
+                                        <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem;">
+                                            <label class="val-label">Selected Category</label>
+                                            <input type="text" id="suggest-cat-display" placeholder="Selected Category" disabled
+                                                style="border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-3); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem; cursor: not-allowed; width: 100%; box-sizing: border-box;">
+                                        </div>
+                                        
+                                        <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem;">
+                                            <label class="val-label">Old Price (USD)</label>
+                                            <input type="text" id="suggest-old-price-display" placeholder="Old Price" disabled
+                                                style="border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-3); padding: 0.75rem 1rem; font-family: inherit; font-size: 0.88rem; cursor: not-allowed; width: 100%; box-sizing: border-box;">
+                                        </div>
+                                        
+                                        <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem;">
+                                            <label class="val-label">Suggested Price (USD)</label>
+                                            <div style="display: flex; align-items: center; position: relative; width: 100%;">
+                                                <span style="position: absolute; left: 1rem; color: var(--text-2); font-weight: 600;">$</span>
+                                                <input type="text" id="suggest-price-input" placeholder="e.g. 20" 
+                                                    style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.75rem 1rem 0.75rem 2rem; font-family: inherit; font-size: 0.88rem; width: 100%; box-sizing: border-box;">
+                                            </div>
+                                        </div>
+                                        
+                                        <button id="btn-submit-suggestion" class="preview-btn" style="width:100%; margin-top: 1.5rem; height: 48px; font-weight: 700;">Submit Suggestion</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Owner Approval Queue (Visible ONLY to Owner/Admin) -->
+                                <div class="admin-panel-card" id="prices-approval-panel" style="display:none; width: 100%;">
+                                    <h3>Pending Approvals</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                                        Review price suggestions submitted by whitelisted users.
+                                    </p>
+                                    <div id="approval-queue-grid" class="admin-grid" style="max-height: 450px; overflow-y: auto;">
+                                        <!-- Dynamically filled with approval requests -->
+                                    </div>
+                                </div>
+                                
+                                <!-- User's Own Suggestions List (Visible to Whitelisted Users) -->
+                                <div class="admin-panel-card" id="prices-my-suggestions-panel" style="display:none; width: 100%;">
+                                    <h3>Your Suggestions</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                                        Tracks all your submitted price suggestions and their current approval status.
+                                    </p>
+                                    <div id="my-suggestions-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto;">
+                                        <!-- Dynamically filled with user's suggestions -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column: Everyone who has access to prices -->
+                            <div class="prices-sidebar-column" style="width: 100%;">
+                                <div class="admin-panel-card" id="prices-access-list-panel" style="width: 100%;">
+                                    <h3>Price Access Users</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 0.5rem; margin-bottom: 1.2rem;">
+                                        List of whitelisted users who have access to price tools.
+                                    </p>
+                                    <div id="prices-access-list-grid" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 450px; overflow-y: auto;">
+                                        <div style="color:var(--text-3); font-size:0.8rem; text-align: center; padding: 1rem;">Loading access list...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+                </main>
+                <footer>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 1rem;">
+                        <p style="position: relative;">HC Values 2026 - All prices are estimates by HC Staff 
+                            <span class="see-more-whitelisted" id="see-more-whitelist-btn">See Who</span>
+                        </p>
+
+                        <a href="https://discord.com/invite/zJMVj8yE9U" target="_blank" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-2); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: color 0.2s;">
+                            <svg width="20" height="20" viewBox="0 0 127.14 96.36" fill="currentColor">
+                                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                            </svg>
+                            Discord Support
+                        </a>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <!-- ═══ RIGHT PANEL: Exclusive (off-screen) ═══ -->
+        <div id="right-panel">
+            <div id="excl-inner">
+                <div class="section-header">
+                    <h2>Exclusive Items</h2>
+                    <p>Items that cannot be purchased with Robux</p>
+                </div>
+                <!-- Category filter strip for exclusive -->
+                <div class="category-nav-wrap">
+                    <div class="category-nav" id="excl-category-nav"></div>
+                </div>
+                <!-- Results -->
+                <div class="section-header" id="excl-items-header" style="display:none;margin-top:2.5rem;">
+                    <h2 id="excl-cat-title"></h2>
+                    <p id="excl-count-label"></p>
+                </div>
+                <div id="excl-empty-state" class="empty-state" style="display:none;">
+                    <div class="empty-icon">✦</div>
+                    <p>No exclusive items found.</p>
+                </div>
+                <div id="excl-items-grid"></div>
+                <!-- Moderator Tiers Section -->
+                <div class="section-header" style="margin-top: 4rem;">
+                    <h2>In-Game Moderator Tiers</h2>
+                    <p>Exclusive items for game moderators</p>
+                </div>
+                <div id="mod-tiers-grid" class="items-grid-inner"></div>
+            </div>
+        </div>
+    </div>
+    <!-- ── ROBLOX CONNECT MODAL ────────────────────────────── -->
+    <div class="modal-overlay active" id="roblox-connect-overlay" style="display: flex;">
+        <div class="roblox-modal-card">
+            <button class="modal-close-btn" id="roblox-modal-close">&times;</button>
+            <div class="roblox-modal-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453z" />
+                </svg>
+            </div>
+            <div id="roblox-modal-step-input">
+                <h3 class="roblox-modal-title">Connect Roblox</h3>
+                <p class="roblox-modal-sub">Link your Roblox account via Bio verification for future Updates.</p>
+                <div class="roblox-input-container">
+                    <input type="text" id="roblox-username-input" class="roblox-username-input" placeholder="Enter Roblox Username" autocomplete="off">
+                </div>
+                <div class="roblox-modal-error" id="roblox-modal-error">User not found. Please try again.</div>
+                <button id="roblox-btn-search" class="roblox-modal-btn primary">Connect</button>
+                <a href="https://discord.com/invite/zJMVj8yE9U" target="_blank" class="roblox-modal-btn" style="background-color: #5865F2; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; margin-top: 10px; border: none;">
+                    <svg width="20" height="20" viewBox="0 0 127.14 96.36" fill="currentColor">
+                        <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                    </svg>
+                    Discord Support
+                </a>
+            </div>
+            <div class="roblox-modal-loading" id="roblox-modal-loading">
+                <div class="spinner"></div>
+                <p style="font-size: 0.9rem; color: var(--text-2); margin-top: 0.5rem;">Syncing with Roblox database...</p>
+            </div>
+            <div class="roblox-modal-result" id="roblox-modal-result">
+                <h3 class="roblox-modal-title">Verify Ownership</h3>
+                <p class="roblox-modal-sub" style="margin-bottom: 1.2rem; font-size: 0.8rem; line-height: 1.4;"> To verify ownership of your account, please paste the generated code below in the "About" section of your Roblox profile.</p>
+                <div class="roblox-verify-profile-snippet">
+                    <img id="roblox-result-avatar" class="roblox-result-avatar-sm" src="" alt="Avatar">
+                    <div style="text-align: left;">
+                        <div id="roblox-result-displayname" class="roblox-result-displayname-sm">Builderman</div>
+                        <div id="roblox-result-username" class="roblox-result-username-sm">@builderman</div>
+                    </div>
+                </div>
+                <div class="roblox-phrase-box">
+                    <span id="roblox-phrase-text" class="roblox-phrase-text">hc-values-5A8E9</span>
+                    <button id="roblox-btn-copy" class="roblox-copy-btn" title="Copy to clipboard">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right: 0.3rem;">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <div class="roblox-modal-error" id="roblox-verify-error" style="margin-top: 0; margin-bottom: 1.2rem;"></div>
+                <div style="display: flex; gap: 1rem; width: 100%; margin-top: 0.5rem;">
+                    <button id="roblox-btn-cancel" class="roblox-modal-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-1); flex: 1; height: 45px;">Cancel</button>
+                    <button id="roblox-btn-confirm" class="roblox-modal-btn primary" style="flex: 1; height: 45px;">Verify & Link</button>
+                </div>
+                <div class="roblox-verify-tip">Once verified, you can delete this code from your profile.</div>
+            </div>
+        </div>
+    </div>
+    <!-- ── DISCORD CONNECT MODAL ────────────────────────────── -->
+    <div class="modal-overlay" id="discord-connect-overlay">
+        <div class="roblox-modal-card discord-modal-card">
+            <div class="roblox-modal-icon-wrap discord-icon-wrap" style="background: rgba(88,101,242,0.15); border-color: rgba(88,101,242,0.3); color: #5865F2;">
+                <svg width="32" height="32" viewBox="0 0 127.14 96.36" fill="currentColor">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+            </div>
+            <h3 class="roblox-modal-title">Connect Discord</h3>
+            <p class="roblox-modal-sub">Link your Discord account to verify server membership before accessing HC Values.</p>
+
+            <div class="roblox-verify-profile-snippet" style="margin-bottom: 1.2rem;">
+                <img id="discord-roblox-user-avatar" class="roblox-result-avatar-sm" src="shield.png" alt="Roblox Avatar">
+                <div style="text-align: left;">
+                    <div id="discord-roblox-user-display" class="roblox-result-displayname-sm">User</div>
+                    <div id="discord-roblox-user-name" class="roblox-result-username-sm">@user</div>
+                    <div class="roblox-verified-badge" style="margin-top: 0.2rem;">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <path d="M20 6L9 17l-5-5"></path>
+                        </svg> Roblox Verified
+                    </div>
+                </div>
+            </div>
+
+            <div id="discord-connect-error" class="roblox-modal-error" style="display: none; margin-bottom: 1rem;"></div>
+
+            <a id="btn-connect-discord-oauth" href="#" class="roblox-modal-btn" style="background-color: #5865F2; color: white; display: flex; align-items: center; justify-content: center; gap: 0.6rem; text-decoration: none; font-weight: 700; height: 50px; border-radius: 100px; width: 100%;">
+                <svg width="22" height="22" viewBox="0 0 127.14 96.36" fill="currentColor">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+                Connect Discord
+            </a>
+            <div class="roblox-verify-tip" style="margin-top: 2rem;"> YOU MUST VERIFY BEFORE ACCESSING THE WEBSITE</div>
+        </div>
+    </div>
+    <!-- ── DISCORD JOIN SERVER REQUIRED MODAL ────────────────── -->
+    <div class="modal-overlay" id="discord-join-overlay">
+        <div class="roblox-modal-card discord-modal-card">
+            <!-- Icon Wrap -->
+            <div class="roblox-modal-icon-wrap discord-icon-wrap">
+                <svg width="32" height="32" viewBox="0 0 127.14 96.36" fill="currentColor">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+            </div>
+            <h3 class="roblox-modal-title">Join Required Discord Server</h3>
+            <p class="roblox-modal-sub">You must join our official Discord server to get access to the website.</p>
+
+            <!-- Connected Account Chip -->
+            <div class="discord-connected-user-pill">
+                <span class="user-pill-label">Connected Account:</span>
+                <div class="user-pill-info">
+                    <img id="join-discord-user-avatar" class="user-pill-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="User Avatar">
+                    <span id="join-discord-user-name" class="user-pill-name">@DiscordUser</span>
+                </div>
+            </div>
+
+            <!-- SERVER TO JOIN CARD -->
+            <div class="discord-server-card">
+                <div class="discord-server-card-header">
+                    <span class="server-card-tag">REQUIRED SERVER TO JOIN</span>
+                </div>
+                <div class="discord-server-body">
+                    <div class="discord-server-icon-wrap">
+                        <img id="join-discord-server-icon" class="discord-server-icon" src="" alt="Server Icon" style="display: none;">
+                        <div id="join-discord-server-icon-fallback" class="discord-server-icon-fallback">
+                            <svg width="26" height="26" viewBox="0 0 127.14 96.36" fill="currentColor">
+                                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="discord-server-info">
+                        <div id="join-discord-server-name" class="discord-server-name">HC Values Server</div>
+                        <div id="join-discord-server-meta" class="discord-server-meta">
+                            <span class="server-status-dot online"></span>
+                            <span id="join-discord-server-meta-text">Official Discord Server</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="discord-server-membership-status">
+                    <span class="status-label">Membership Status:</span>
+                    <span id="join-discord-membership-badge" class="discord-status-badge unjoined">
+                        <span class="badge-icon">❌</span> Invalid
+                    </span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="discord-action-buttons">
+                <a id="btn-join-discord-server" href="https://discord.com/invite/zJMVj8yE9U" target="_blank" rel="noopener noreferrer" class="roblox-modal-btn join-server-btn">
+                    <svg width="20" height="20" viewBox="0 0 127.14 96.36" fill="currentColor">
+                        <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                    </svg>
+                    <span>JOIN SERVER</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 2px;">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+                    </svg>
+                </a>
+                <button id="btn-check-discord-membership" class="roblox-modal-btn check-again-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="check-icon-svg">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    <span>Check Membership Again</span>
+                </button>
+            </div>
+
+            <div class="discord-poll-footer">
+                <span class="live-pulse-dot"></span>
+                <span>Checking membership automatically every 5 seconds...</span>
+            </div>
+        </div>
+    </div>
+    <!-- ── DONATION MODAL ─────────────────────────────────────── -->
+    <div class="modal-overlay" id="donation-overlay">
+        <div class="donation-modal-card" id="donation-modal-card">
+            <button class="modal-close-btn" id="donation-modal-close">&times;</button>
+            <div class="donation-header">
+                <div class="donation-icon-wrap">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="donation-title">Support HC Values</h3>
+                    <p class="donation-sub">Every donation helps keep the server running 💜</p>
+                </div>
+            </div>
+
+            <!-- Tab selector -->
+            <div class="donation-tabs">
+                <button class="donation-tab active" id="dtab-paypal" data-tab="paypal">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.99l-.316 2.001c-.055.348.217.658.57.658h3.907c.461 0 .853-.338.924-.794l.038-.196.738-4.681.047-.256a.932.932 0 0 1 .923-.795h.58c3.76 0 6.705-1.528 7.562-5.949.36-1.847.174-3.388-.663-4.908z"/></svg>
+                    PayPal
+                </button>
+                <button class="donation-tab" id="dtab-crypto" data-tab="crypto">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.5 9.5h3.5a1.5 1.5 0 0 1 0 3H9.5V9.5z"/><path d="M9.5 12.5h4a1.5 1.5 0 0 1 0 3H9.5v-3z"/><line x1="9.5" y1="7.5" x2="9.5" y2="16.5"/><line x1="12" y1="7.5" x2="12" y2="9.5"/><line x1="12" y1="15.5" x2="12" y2="17.5"/></svg>
+                    Crypto
+                </button>
+                <button class="donation-tab" id="dtab-robux" data-tab="robux">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453z"/></svg>
+                    Robux
+                </button>
+            </div>
+
+            <!-- PayPal Panel -->
+            <div class="donation-panel active" id="dpanel-paypal">
+                <div class="donation-info-text">Send a donation via PayPal to support the project.</div>
+                <div class="donation-field-card">
+                    <div class="donation-field-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.99l-.316 2.001c-.055.348.217.658.57.658h3.907c.461 0 .853-.338.924-.794l.038-.196.738-4.681.047-.256a.932.932 0 0 1 .923-.795h.58c3.76 0 6.705-1.528 7.562-5.949.36-1.847.174-3.388-.663-4.908z"/></svg>
+                        PayPal Username / Link
+                    </div>
+                    <div class="donation-value">cyxopath</div>
+                </div>
+                <a href="https://paypal.me/cyxopath" target="_blank" class="donation-action-btn paypal-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.99l-.316 2.001c-.055.348.217.658.57.658h3.907c.461 0 .853-.338.924-.794l.038-.196.738-4.681.047-.256a.932.932 0 0 1 .923-.795h.58c3.76 0 6.705-1.528 7.562-5.949.36-1.847.174-3.388-.663-4.908z"/></svg>
+                    Open PayPal →
+                </a>
+            </div>
+
+            <!-- Crypto Panel -->
+            <div class="donation-panel" id="dpanel-crypto">
+                <div class="donation-info-text">Send crypto to any of the addresses below. Click the copy button to copy an address.</div>
+                <div class="crypto-address-list" id="crypto-address-list">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Robux Panel -->
+            <div class="donation-panel" id="dpanel-robux">
+                <div class="donation-info-text">Purchase a Robux gamepass to support us. Choose an amount below.</div>
+                <div class="robux-tiers-list" id="robux-tiers-list">
+                    <!-- Filled by JS -->
+                </div>
+                
+                <div class="robux-plus-divider">
+                    <span>OR</span>
+                </div>
+                
+                <a href="https://www.roblox.com/users/1945506007/profile" target="_blank" rel="noopener noreferrer" class="robux-plus-card">
+                    <div class="robux-plus-icon">➕</div>
+                    <div class="robux-plus-info">
+                        <div class="robux-plus-title">Send via Roblox Plus</div>
+                        <div class="robux-plus-desc">Donate directly to @cyxopathic on Roblox</div>
+                    </div>
+                    <span class="robux-plus-arrow">→</span>
+                </a>
+            </div>
+
+            <!-- Appreciation message shown on all options/tabs -->
+            <div class="donation-appreciate-note">I appreciate any amount</div>
+        </div>
+    </div>
+
+    <!-- Collapsible Ad Box (Sham's Cafe) -->
+    <div id="cheat-floating-box" class="ad-box-container">
+        <!-- Round Circle Expand Arrow Button (sticks out on side when minimized) -->
+        <button type="button" class="ad-side-expand-circle" id="ad-side-expand-btn" title="Click to Expand Ad Box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+
+        <!-- Top Neon Badge -->
+        <div class="ad-topic-badge">🔥EVERYTHING 80% / DOORDASH 50% CHEAPER!🔥</div>
+
+        <!-- Header with title, USA badge & minimize-to-side arrow -->
+        <div class="ad-box-header" id="ad-box-header">
+            <div class="ad-box-header-title">
+                <img src="https://cdn.discordapp.com/icons/1405216941383094376/4cf03d9b727b4843d5f204154ec09aef.jpg?size=512" alt="Sham's Cafe Logo" class="ad-server-icon">
+                <div class="ad-server-info">
+                    <div class="ad-server-name-wrap">
+                        <span class="ad-server-name">Sham’s Cafe</span>
+                        <span class="ad-usa-badge">AVAILABLE ONLY IN USA & CA</span>
+                    </div>
+                    <span class="ad-server-badge">☕ #1 Food & Ride Deals</span>
+                </div>
+            </div>
+            <button type="button" class="ad-slide-btn" id="ad-slide-toggle-btn" title="Minimize to side">
+                <svg class="ad-slide-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Main Ad Content (Clicking opens Big View) -->
+        <div class="ad-box-body" id="ad-box-body">
+            <p class="ad-description">
+                Your #1 destination for premium food & ride deals at unbeatable prices!
+            </p>
+            
+            <div class="ad-services-title">🚀 <strong>Services Available:</strong></div>
+            <div class="ad-services-list">
+                <div class="ad-service-item"><span>🍔</span> <strong>Uber Eats</strong> – Save big on your favorite meals</div>
+                <div class="ad-service-item"><span>🛵</span> <strong>DoorDash</strong> – Fast delivery with exclusive discounts</div>
+                <div class="ad-service-item"><span>🌯</span> <strong>Chipotle</strong> – Delicious meals for less</div>
+                <div class="ad-service-item"><span>🐔</span> <strong>Chick-fil-A</strong> – Great deals on your favorites</div>
+                <div class="ad-service-item"><span>🚗</span> <strong>Uber Rides</strong> – Affordable rides whenever you need them</div>
+                <div class="ad-service-item"><span>🥗</span> <strong>Factor75</strong> – Fresh, chef-prepared meals at amazing prices</div>
+                <div class="ad-service-item"><span>🐶</span> <strong>The Farmer’s Dog</strong> – Premium fresh dog food delivered for less</div>
+                <div class="ad-service-item"><span>🥬</span> <strong>HelloFresh</strong> – Easy, delicious meal kits with exclusive savings (U.S. & Canada)</div>
+            </div>
+
+            <a href="https://discord.gg/zJMVj8yE9U" target="_blank" rel="noopener noreferrer" class="cheat-discord-btn ad-discord-btn" onclick="event.stopPropagation();">
+                <svg class="cheat-discord-icon" width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+                Join Discord
+            </a>
+
+            <div class="ad-click-hint">🔍 Click box for expanded view</div>
+        </div>
+    </div>
+
+    <!-- Big View Modal (Expanded Info Overlay) -->
+    <div id="ad-big-modal" class="ad-modal-overlay" style="display: none;">
+        <div class="ad-modal-content">
+            <button type="button" class="ad-modal-close" id="ad-modal-close-btn">&times;</button>
+            
+            <div class="ad-modal-header">
+                <img src="https://cdn.discordapp.com/icons/1405216941383094376/4cf03d9b727b4843d5f204154ec09aef.jpg?size=512" alt="Sham's Cafe Logo" class="ad-modal-logo">
+                <div class="ad-modal-title-wrap">
+                    <div class="ad-modal-name-row">
+                        <h2 class="ad-modal-title">Sham’s Cafe</h2>
+                        <span class="ad-usa-badge">AVAILABLE ONLY IN USA & CA</span>
+                    </div>
+                    <span class="ad-modal-badge">🔥EVERYTHING 80% CHEAPER/DOORDASH 50%!</span>
+                </div>
+            </div>
+
+            <p class="ad-modal-desc">
+                Welcome to <strong>Sham’s Cafe</strong> – Your #1 destination for premium food & ride deals at unbeatable prices! Save big on every order with fast delivery and 24/7 dedicated support.
+            </p>
+
+            <div class="ad-modal-services-header">🚀 Full List of Exclusive Services</div>
+            <div class="ad-modal-services-grid">
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🍔</div>
+                    <div class="ad-service-details">
+                        <strong>Uber Eats</strong>
+                        <span>Save big on your favorite meals</span>
+                    </div>
+                </div>
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🛵</div>
+                    <div class="ad-service-details">
+                        <strong>DoorDash</strong>
+                        <span>Fast delivery with exclusive discounts</span>
+                    </div>
+                </div>
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🌯</div>
+                    <div class="ad-service-details">
+                        <strong>Chipotle</strong>
+                        <span>Delicious meals for less</span>
+                    </div>
+                </div>
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🐔</div>
+                    <div class="ad-service-details">
+                        <strong>Chick-fil-A</strong>
+                        <span>Great deals on your favorites</span>
+                    </div>
+                </div>
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🚗</div>
+                    <div class="ad-service-details">
+                        <strong>Uber Rides</strong>
+                        <span>Affordable rides whenever you need them</span>
+                    </div>
+                </div>
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🥗</div>
+                    <div class="ad-service-details">
+                        <strong>Factor75</strong>
+                        <span>Fresh, chef-prepared meals at amazing prices</span>
+                    </div>
+                </div>
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🐶</div>
+                    <div class="ad-service-details">
+                        <strong>The Farmer’s Dog</strong>
+                        <span>Premium fresh dog food delivered for less</span>
+                    </div>
+                </div>
+                <div class="ad-modal-service-card">
+                    <div class="ad-service-icon">🥬</div>
+                    <div class="ad-service-details">
+                        <strong>HelloFresh</strong>
+                        <span>Easy, delicious meal kits with exclusive savings (U.S. & Canada)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ad-modal-features-row">
+                <div class="ad-modal-feature">⚡ 24/7 Fast & Friendly Support</div>
+                <div class="ad-modal-feature">✅ Verified & Trusted Deals</div>
+                <div class="ad-modal-feature">🎁 Regular Giveaways & Discounts</div>
+            </div>
+
+            <a href="https://discord.gg/zJMVj8yE9U" target="_blank" rel="noopener noreferrer" class="cheat-discord-btn ad-modal-discord-btn">
+                <svg class="cheat-discord-icon" width="22" height="22" viewBox="0 0 127.14 96.36" fill="currentColor">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+                Join Sham’s Cafe on Discord
+            </a>
+            
+            <div class="ad-modal-footer-hint">Click anywhere outside this box to close</div>
+        </div>
+    </div>
+
+    <script src="script.js?v=4.4"></script>
+</body>
+</html>
+

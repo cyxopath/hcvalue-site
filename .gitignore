@@ -1,0 +1,11 @@
+# Secrets — NEVER upload to GitHub
+.env
+
+# Node dependencies (Railway installs these automatically)
+node_modules/
+
+# Runtime data files (sensitive / large)
+sessions.json
+users.json
+votes.json
+logs/

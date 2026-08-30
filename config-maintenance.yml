@@ -1,0 +1,9 @@
+tunnel: 8583946b-96b1-42af-9e1a-b1da07ee95d9
+credentials-file: C:\Users\xxxty\.cloudflared\8583946b-96b1-42af-9e1a-b1da07ee95d9.json
+
+ingress:
+  - hostname: hcvalue.xyz
+    service: http://localhost:8080
+  - hostname: www.hcvalue.xyz
+    service: http://localhost:8080
+  - service: http_status:404

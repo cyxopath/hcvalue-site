@@ -1,0 +1,1307 @@
+{
+  "config": {
+    "tradingServerLink": "https://www.roblox.com/share?code=dc8105db6038374e83b43a7ef874780a&type=Server",
+    "discordEnabled": true,
+    "discordGuildId": "1405216941383094376",
+    "discordInviteLink": "https://discord.com/invite/zJMVj8yE9U"
+  },
+  "categories": {
+    "Knifes": {
+      "items": {
+        "Bitcoin": {
+          "robux": "X",
+          "usd": "2.500",
+          "emoji": "<:BtcKnife:1470134307086401637>"
+        },
+        "Beta": {
+          "robux": "20.000",
+          "usd": "100",
+          "emoji": "<:betaknife:1470014221411684427>"
+        },
+        "Fishbone": {
+          "robux": "8.000",
+          "usd": "40",
+          "emoji": "<:FishboneKnife:1470172227420033036>"
+        },
+        "Nightblade": {
+          "robux": "7.000",
+          "usd": "35",
+          "emoji": "<:NightbladeKnife:1470172251176304650>"
+        }
+      },
+      "message_id": 1470157903787725000,
+      "channel_id": 1470156666313117700
+    },
+    "Beams": {
+      "items": {
+        "Lightning": {
+          "robux": "X",
+          "usd": "1.500",
+          "emoji": "<:lightningbeam:1470111744079953991>",
+          "customImg": "images/Lightning_Beam.png"
+        },
+        "Beta": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:betabeam:1470172551433949411>"
+        },
+        "Hallows": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:hallowbeam:1470172496350412830>",
+          "customImg": "images/Hallows_Beam.png"
+        },
+        "Kitty": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:kittybeam:1470172583784615967>",
+          "customImg": "images/Kitty_Beam.png"
+        },
+        "Kirumi": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:kirumibeam:1470172601102893263>",
+          "customImg": "images/Kirumi_Beam.png"
+        },
+        "Rainbow": {
+          "robux": "2.000",
+          "usd": "10",
+          "emoji": "<a:rainbowbeam:1470172623844671542>",
+          "customImg": "gifs/Rainbow_Beam.gif"
+        },
+        "Blue": {
+          "usd": "5",
+          "robux": "1.000",
+          "customImg": "images/Blue_Beam.png"
+        },
+        "Green": {
+          "usd": "5",
+          "robux": "1.000",
+          "customImg": "images/Green_Beam.png"
+        },
+        "Red": {
+          "usd": "5",
+          "robux": "1.000",
+          "customImg": "images/Red_Beam.png"
+        },
+        "Orange": {
+          "usd": "5",
+          "robux": "1.000",
+          "customImg": "images/Orange_Beam.png"
+        }
+      },
+      "message_id": 1470157928982904800,
+      "channel_id": 1470156666313117700
+    },
+    "Tags": {
+      "items": {
+        "Verified": {
+          "robux": "X",
+          "usd": "5.000",
+          "emoji": "<:VerifiedTag:1470172279186129141>",
+          "customImg": "images/Verified_Tag.png"
+        },
+        "Ghost": {
+          "robux": "10.000",
+          "usd": "50",
+          "emoji": "<:Ghosttag:1470172348576563355>",
+          "customImg": "images/Ghost_Tag.png"
+        },
+        "Heart": {
+          "robux": "9.000",
+          "usd": "45",
+          "emoji": "<:Hearttag:1470172322764820582>",
+          "customImg": "images/Heart_Tag.png"
+        },
+        "Meow": {
+          "robux": "7.000",
+          "usd": "35",
+          "emoji": "<:MeowTag:1470172306981523684>",
+          "customImg": "images/Meow_Tag.png"
+        },
+        "Beta": {
+          "robux": "3.000",
+          "usd": "15",
+          "emoji": "<:Betatag:1470172365752111134>",
+          "customImg": "images/Beta_Tag.png"
+        },
+        "Snow": {
+          "robux": "3.000",
+          "usd": "15",
+          "emoji": "<:Snowtag:1470172384412696667>",
+          "customImg": "images/Snow_Tag.png"
+        },
+        "Easter": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:EasterTag:1470172406462283898>",
+          "customImg": "images/Easter_Tag.png"
+        },
+        "Blood": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:BloodTag:1470172450498281563>",
+          "customImg": "images/Blood_Tag.png"
+        },
+        "Zombie": {
+          "robux": "2.000",
+          "usd": "10",
+          "emoji": "<:ZombieTag:1470172430873137321>",
+          "customImg": "images/Zombie_Tag.png"
+        }
+      },
+      "message_id": 1470157913736872200,
+      "channel_id": 1470156666313117700
+    },
+    "Items": {
+      "items": {
+        "HeartBalloon": {
+          "robux": "8.000",
+          "usd": "40",
+          "emoji": "<:HeartBalloon:1470172772197203991>"
+        },
+        "WaterGun": {
+          "robux": "8.000",
+          "usd": "40",
+          "emoji": "<:WaterGun:1470175653411160128>"
+        },
+        "FireworkLauncher": {
+          "robux": "600",
+          "usd": "3",
+          "emoji": "<:Firework_Launcherr:1470175653168021604>"
+        },
+        "Loot Capsule": {
+          "robux": "X",
+          "usd": "0.2",
+          "emoji": "<:LootCapsule:1470175652962373663>"
+        },
+        "Capsule Key": {
+          "robux": "X",
+          "usd": "0.2",
+          "emoji": "<:CapsuleKey:1470175653180735590>"
+        }
+      },
+      "message_id": 1470158001435443500,
+      "channel_id": 1470156666313117700
+    },
+    "Books": {
+      "items": {
+        "Slaughter": {
+          "usd": "70",
+          "robux": "14.000",
+          "emoji": "<:book:1470172739812851957>"
+        },
+        "Flutter": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:book:1470172739812851957>"
+        },
+        "Spirit": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:book:1470172739812851957>"
+        },
+        "Eruption": {
+          "robux": "3.000",
+          "usd": "15",
+          "emoji": "<:book:1470172739812851957>"
+        },
+        "Subzero": {
+          "robux": "2.000",
+          "usd": "10",
+          "emoji": "<:book:1470172739812851957>"
+        }
+      },
+      "message_id": 1470157980493283300,
+      "channel_id": 1470156666313117700
+    },
+    "Frames": {
+      "items": {
+        "Lightbringer": {
+          "robux": "800",
+          "usd": "4",
+          "emoji": "<:Lightbringerframe:1470175653117558968>",
+          "customImg": "images/Lightbringer_Frame.png"
+        },
+        "Dusk": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Dusk_Frame.png"
+        },
+        "Aurora": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Aurora Frame.png"
+        },
+        "Cyan Waves": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Cyan_Waves_Frame.png"
+        },
+        "Sakura": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Sakrua_Frame.png"
+        },
+        "Valley": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Valley_Frame.png"
+        }
+      },
+      "message_id": 1470158023895941400,
+      "channel_id": 1470156666313117700
+    },
+    "Double Barrel": {
+      "items": {
+        "Poseidon": {
+          "robux": "8.000",
+          "usd": "40",
+          "emoji": "<:Poseidondb:1470007287211884729>",
+          "customImg": "images/Poseidon_Db.png"
+        },
+        "Shiryus Breath": {
+          "robux": "7.000",
+          "usd": "35",
+          "emoji": "<:shiryudb:1470009661225832449>",
+          "customImg": "images/Shiryus_Db.png"
+        },
+        "Ascension": {
+          "robux": "6.000",
+          "usd": "30",
+          "emoji": "<:Ascensiondb:1470115504864624823>",
+          "customImg": "images/Ascension_Db.png"
+        },
+        "Adurite": {
+          "robux": "5.000",
+          "usd": "25",
+          "emoji": "<:Aduritedb:1470115461986521231>",
+          "customImg": "images/Adurite_Db.png"
+        },
+        "Lightbringer": {
+          "robux": "5.000",
+          "usd": "25",
+          "emoji": "<:lightbringerdb:1470032714894803177>",
+          "customImg": "images/Lightbringer_Db.png"
+        },
+        "Void Dragon": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:VoidDragonDb:1470115565694877707>",
+          "customImg": "images/Void_Dragon_Db.png"
+        },
+        "Snow Dragon": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:snowdragondb:1470115671948923010>",
+          "customImg": "images/Snow_Dragon_Db.png"
+        },
+        "Lovestruck": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:LovestruckDb:1470117473989693643>",
+          "customImg": "images/Lovestruck_Db.png"
+        },
+        "Kitty": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:KittyDb:1470116014179090747>",
+          "customImg": "images/Kitty_Db.png"
+        },
+        "Heartbringer": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:HeartbringerDb:1470115946302537758>",
+          "customImg": "images/Heartbringer_Db.png"
+        },
+        "Hell Hound": {
+          "robux": "3.000",
+          "usd": "15",
+          "emoji": "<:HellHoundDb:1470116111184953537>",
+          "customImg": "images/Hell_Hound_Db.png"
+        },
+        "Candy Cane": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:CandyCaneDb:1470116267410198747>",
+          "customImg": "images/Candy_Db.png"
+        },
+        "Hallows": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:HallowsDb:1470116314428346657>",
+          "customImg": "images/Hallows_Db.png"
+        },
+        "Hell Dragon": {
+          "robux": "2.000",
+          "usd": "10",
+          "emoji": "<:HellDragonDb:1470116353091436686>",
+          "customImg": "images/Hell_Dragon_Db.png"
+        },
+        "Deathbringer": {
+          "robux": "1.600",
+          "usd": "8",
+          "emoji": "<:DeathbringerDb:1470116407185375373>",
+          "customImg": "images/Deathbringer_Db.png"
+        },
+        "Blacksteel Dragon": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Blacksteel_Db.png"
+        },
+        "Cupid": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Cupid_Db.png"
+        },
+        "Kirumi": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Kirumi_Db.png"
+        },
+        "Black Cat": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Black_Cat_Db.png"
+        },
+        "Arctic": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Arctic_Db.png"
+        },
+        "Floral": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Floral_Db.png"
+        },
+        "Binary": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Binary_Db.png"
+        },
+        "Phoenix": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Pheonix_Db.png"
+        },
+        "Volcanic Ashes": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Volcanic_Ashes_Db.png"
+        },
+        "Voxel": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Voxel_Db.png"
+        },
+        "Amethyst": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Amethyst_Db.png"
+        },
+        "Arsenic": {
+          "usd": "6",
+          "robux": "1.200",
+          "customImg": "images/Arsenic_Db.png"
+        },
+        "Green Tint": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Green _Tint_Db.png"
+        },
+        "Hexagon": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Hexagon_Db.png"
+        },
+        "Ember": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Ember_Db.png"
+        },
+        "Radiation": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Radiation_Db.png"
+        },
+        "Black Ice": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Black_Ice_Db.png"
+        },
+        "Strawberry Shortcake": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Strawberry_Shortcake_Db.png"
+        },
+        "Crimson Fang": {
+          "usd": "3",
+          "robux": "600",
+          "customImg": "images/Crimson_Fang_Db.png"
+        },
+        "Hello Kitty": {
+          "usd": "3",
+          "robux": "600",
+          "customImg": "images/Hello_Kitty_Db.png"
+        },
+        "Void": {
+          "usd": "3",
+          "robux": "600",
+          "customImg": "images/Void_Db.png"
+        }
+      },
+      "message_id": null,
+      "channel_id": 1469977081331978500
+    },
+    "Revolver": {
+      "items": {
+        "Poseidon": {
+          "robux": "8.000",
+          "usd": "40",
+          "emoji": "<:posrev:1470020387277373441>",
+          "customImg": "images/Poseidon_Rev.png"
+        },
+        "Shiryus Breath": {
+          "robux": "7.000",
+          "usd": "35",
+          "emoji": "<:shiryurev:1470025811124814062>",
+          "customImg": "images/Shiryus_Rev.png"
+        },
+        "Ascension": {
+          "robux": "6.000",
+          "usd": "30",
+          "emoji": "<:ascensionrev:1470171330102956290>",
+          "customImg": "images/Ascension_Rev.png"
+        },
+        "Adurite": {
+          "robux": "5.000",
+          "usd": "25",
+          "emoji": "<:AduriteRev:1470160549513007166>",
+          "customImg": "images/Adurite_Rev.png"
+        },
+        "Lightbringer": {
+          "robux": "5.000",
+          "usd": "25",
+          "emoji": "<:lightbringerrev:1470025858726101159>",
+          "customImg": "images/Lightbringer_Rev.png"
+        },
+        "Lovestruck": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:LovestruckRev:1470163214019858486>",
+          "customImg": "images/Lovestruck_Rev.png"
+        },
+        "Kitty": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:Kittyrev:1470162991474540696>",
+          "customImg": "images/Kitty_Rev.png"
+        },
+        "Heartbringer": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:HeartbringerRev:1470163013838311638>",
+          "customImg": "images/Heartbringer_Rev.png"
+        },
+        "Snow Dragon": {
+          "robux": "4.000",
+          "usd": "20",
+          "emoji": "<:Snowdragonrev:1470162883198324926>",
+          "customImg": "images/Snow_Dragon_Rev.png"
+        },
+        "Void Dragon": {
+          "robux": "3.600",
+          "usd": "18",
+          "emoji": "<:VoidDragonrev:1470160672460505224>",
+          "customImg": "images/Void_Dragon_Rev.png"
+        },
+        "Hell Hound": {
+          "robux": "3.000",
+          "usd": "15",
+          "emoji": "<:HellHoundRev:1470163250715951294>",
+          "customImg": "images/Hell_Hound_Rev.png"
+        },
+        "Candy Cane": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:CandyCaneRev:1470163283037393058>",
+          "customImg": "images/Candy_Rev.png"
+        },
+        "Hallows": {
+          "robux": "2.400",
+          "usd": "12",
+          "emoji": "<:HallowRev:1470163336342798568>",
+          "customImg": "images/Hallows_Rev.png"
+        },
+        "Hell Dragon": {
+          "robux": "2.000",
+          "usd": "10",
+          "emoji": "<:HellDragonRev:1470163359818055782>",
+          "customImg": "images/Hell_Dragon_Rev.png"
+        },
+        "Deathbringer": {
+          "robux": "1.600",
+          "usd": "8",
+          "emoji": "<:DeathbringerRev:1470163394911801589>",
+          "customImg": "images/Deathbringer_Rev.png"
+        },
+        "Blacksteel Dragon": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Blacksteel_Rev.png"
+        },
+        "Cupid": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Cupid_Rev.png"
+        },
+        "Kirumi": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Kirumi_Rev.png"
+        },
+        "Black Cat": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Black_Cat_Rev.png"
+        },
+        "Arctic": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Arctic_Rev.png"
+        },
+        "Floral": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Floral_Rev.png"
+        },
+        "Binary": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Binary_Rev.png"
+        },
+        "Phoenix": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Pheonix_Rev.png"
+        },
+        "Volcanic Ashes": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Volcanic_Ashes_Rev.png"
+        },
+        "Voxel": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Voxel_Rev.png"
+        },
+        "Amethyst": {
+          "robux": "1.200",
+          "usd": "6",
+          "customImg": "images/Amethyst_Rev.png"
+        },
+        "Arsenic": {
+          "usd": "6",
+          "robux": "1.200",
+          "customImg": "images/Arsenic_Rev.png"
+        },
+        "Green Tint": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Green_Tint_Rev.png"
+        },
+        "Hexagon": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Hexagon_Rev.png"
+        },
+        "Ember": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Ember_Rev.png"
+        },
+        "Radiation": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Radiation_Rev.png"
+        },
+        "Black Ice": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Black_Ice_Rev.png"
+        },
+        "Strawberry Shortcake": {
+          "robux": "600",
+          "usd": "3",
+          "customImg": "images/Strawberry_Shortcake_Rev.png"
+        },
+        "Crimson Fang": {
+          "usd": "3",
+          "robux": "600",
+          "customImg": "images/Crimson_Fang_Rev.png"
+        },
+        "Hello Kitty": {
+          "usd": "3",
+          "robux": "600",
+          "customImg": "images/Hello_Kitty_Rev.png"
+        },
+        "Void": {
+          "usd": "3",
+          "robux": "600",
+          "customImg": "images/Void_Rev.png"
+        }
+      },
+      "message_id": null,
+      "channel_id": 1469977081331978500
+    },
+    "Tactical": {
+      "items": {
+        "Poseidon": {
+          "robux": "4.000",
+          "usd": "20",
+          "customImg": "images/Poseidon_Tac.png"
+        },
+        "Ascension": {
+          "robux": "3.000",
+          "usd": "15",
+          "customImg": "images/Ascension_Tac.png"
+        },
+        "Lightbringer": {
+          "robux": "3.000",
+          "usd": "15",
+          "customImg": "images/Lightbringer_Tac.png"
+        },
+        "Shiryus Breath": {
+          "robux": "2.000",
+          "usd": "10",
+          "customImg": "images/Shiryus_Tac.png"
+        },
+        "Lovestruck": {
+          "robux": "2.000",
+          "usd": "10",
+          "customImg": "images/Lovestruck_Tac.png"
+        },
+        "Kitty": {
+          "robux": "2.000",
+          "usd": "10",
+          "customImg": "images/Kitty_Tac.png"
+        },
+        "Heartbringer": {
+          "robux": "2.000",
+          "usd": "10",
+          "customImg": "images/Heartbringer_Tac.png"
+        },
+        "Adurite": {
+          "robux": "1.600",
+          "usd": "8",
+          "customImg": "images/Adurite_Tac.png"
+        },
+        "Void Dragon": {
+          "robux": "1.400",
+          "usd": "7",
+          "customImg": "images/Void_Dragon_Tac.png"
+        },
+        "Snow Dragon": {
+          "robux": "1.400",
+          "usd": "7",
+          "customImg": "images/Snow_Dragon_Tac.png"
+        },
+        "Hell Hound": {
+          "robux": "1.000",
+          "usd": "5",
+          "customImg": "images/Hello_Kitty_Tac.png"
+        },
+        "Candy Cane": {
+          "robux": "1.000",
+          "usd": "5",
+          "customImg": "images/Candy_Cane_Tac.png"
+        },
+        "Hallows": {
+          "robux": "1.000",
+          "usd": "5",
+          "customImg": "images/Hallows_Tac.png"
+        },
+        "Hell Dragon": {
+          "robux": "1.000",
+          "usd": "5",
+          "customImg": "images/Hell_Dragon_Tac.png"
+        },
+        "Deathbringer": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Deathbringer_Tac.png"
+        },
+        "Blacksteel Dragon": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Blacksteel_Tac.png"
+        },
+        "Cupid": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Cupid_Tac.png"
+        },
+        "Kirumi": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Kirumi_Tac.png"
+        },
+        "Black Cat": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Black_Cat_Tac.png"
+        },
+        "Arctic": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Arctic_Tac.png"
+        },
+        "Floral": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Floral_Tac.png"
+        },
+        "Binary": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Binary_Tac.png"
+        },
+        "Phoenix": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Pheonix_Tac.png"
+        },
+        "Volcanic Ashes": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Volcanic_Ashes_Tac.png"
+        },
+        "Voxel": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Voxel_Tac.png"
+        },
+        "Amethyst": {
+          "robux": "800",
+          "usd": "4",
+          "customImg": "images/Amethyst_Tac.png"
+        },
+        "Arsenic": {
+          "usd": "3",
+          "robux": "600",
+          "customImg": "images/Arsenic_Tac.png"
+        },
+        "Green Tint": {
+          "robux": "400",
+          "usd": "2",
+          "customImg": "images/Green_Tint_Tac.png"
+        },
+        "Hexagon": {
+          "robux": "400",
+          "usd": "2",
+          "customImg": "images/Hexagon_Tac.png"
+        },
+        "Ember": {
+          "robux": "400",
+          "usd": "2",
+          "customImg": "images/Ember_Tac.png"
+        },
+        "Radiation": {
+          "robux": "400",
+          "usd": "2",
+          "customImg": "images/Radiation_Tac.png"
+        },
+        "Black Ice": {
+          "robux": "400",
+          "usd": "2",
+          "customImg": "images/Black_Ice_Tac.png"
+        },
+        "Strawberry Shortcake": {
+          "robux": "400",
+          "usd": "2",
+          "customImg": "images/Strawberry_Shortcake_Tac.png"
+        },
+        "Void": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Void_Tac.png"
+        },
+        "Crimson Fang": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Crimson_Fang_Tac.png"
+        },
+        "Hello Kitty": {
+          "usd": "2",
+          "robux": "400",
+          "customImg": "images/Hello_Kitty_Tac.png"
+        }
+      },
+      "message_id": 1470025592455037000,
+      "channel_id": 1469977081331978500
+    },
+    "Smg": {
+      "items": {
+        "Ascension": {
+          "robux": "3.000",
+          "usd": "15"
+        },
+        "Poseidon": {
+          "robux": "1.600",
+          "usd": "8"
+        },
+        "Shiryus Breath": {
+          "robux": "1.400",
+          "usd": "7"
+        },
+        "Adurite": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Lightbringer": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Void Dragon": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Snow Dragon": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Heartbringer": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Kitty": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Lovestruck": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Hell Hound": {
+          "robux": "800",
+          "usd": "4"
+        },
+        "Candy Cane": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Hallows": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Hell Dragon": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Deathbringer": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Blacksteel Dragon": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Cupid": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Kirumi": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Black Cat": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Arctic": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Floral": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Binary": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Phoenix": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Volcanic Ashes": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Voxel": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Amethyst": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Arsenic": {
+          "usd": "2",
+          "robux": "400"
+        },
+        "Green Tint": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Hexagon": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Ember": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Radiation": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Black Ice": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Strawberry Shortcake": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Crimson Fang": {
+          "usd": "1",
+          "robux": "200"
+        },
+        "Hello Kitty": {
+          "usd": "1",
+          "robux": "200"
+        },
+        "Void": {
+          "usd": "1",
+          "robux": "200"
+        }
+      },
+      "message_id": null,
+      "channel_id": 1469977081331978500
+    },
+    "Silencer": {
+      "items": {
+        "Poseidon": {
+          "robux": "1.600",
+          "usd": "8"
+        },
+        "Shiryus Breath": {
+          "robux": "1.400",
+          "usd": "7"
+        },
+        "Adurite": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Lightbringer": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Ascension": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Void Dragon": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Snow Dragon": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Heartbringer": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Kitty": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Lovestruck": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Hell Hound": {
+          "robux": "800",
+          "usd": "4"
+        },
+        "Candy Cane": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Hallows": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Hell Dragon": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Deathbringer": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Blacksteel Dragon": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Cupid": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Kirumi": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Black Cat": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Arctic": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Floral": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Binary": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Phoenix": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Volcanic Ashes": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Voxel": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Amethyst": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Arsenic": {
+          "usd": "2",
+          "robux": "400"
+        },
+        "Green Tint": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Hexagon": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Ember": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Radiation": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Black Ice": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Strawberry Shortcake": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Crimson Fang": {
+          "usd": "1",
+          "robux": "200"
+        },
+        "Hello Kitty": {
+          "usd": "1",
+          "robux": "200"
+        },
+        "Void": {
+          "usd": "1",
+          "robux": "200"
+        }
+      },
+      "message_id": null,
+      "channel_id": 1469977081331978500
+    },
+    "Shotgun": {
+      "items": {
+        "Poseidon": {
+          "robux": "1.600",
+          "usd": "8"
+        },
+        "Shiryus Breath": {
+          "robux": "1.400",
+          "usd": "7"
+        },
+        "Adurite": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Lightbringer": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Ascension": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Void Dragon": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Snow Dragon": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Heartbringer": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Kitty": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Lovestruck": {
+          "robux": "1.200",
+          "usd": "6"
+        },
+        "Hell Hound": {
+          "robux": "800",
+          "usd": "4"
+        },
+        "Candy Cane": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Hallows": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Hell Dragon": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Deathbringer": {
+          "robux": "600",
+          "usd": "3"
+        },
+        "Blacksteel Dragon": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Cupid": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Kirumi": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Black Cat": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Arctic": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Floral": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Binary": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Phoenix": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Volcanic Ashes": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Voxel": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Amethyst": {
+          "robux": "400",
+          "usd": "2"
+        },
+        "Arsenic": {
+          "usd": "2",
+          "robux": "400"
+        },
+        "Green Tint": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Hexagon": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Ember": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Radiation": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Black Ice": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Strawberry Shortcake": {
+          "robux": "200",
+          "usd": "1"
+        },
+        "Crimson Fang": {
+          "usd": "1",
+          "robux": "200"
+        },
+        "Hello Kitty": {
+          "usd": "1",
+          "robux": "200"
+        },
+        "Void": {
+          "usd": "1",
+          "robux": "200"
+        }
+      },
+      "message_id": null,
+      "channel_id": 1469977081331978500
+    },
+    "Exclusives": {
+      "items": {
+        "Wings": {
+          "robux": "X",
+          "usd": "3.000",
+          "customImg": "images/wings.png"
+        }
+      }
+    }
+  },
+  "symbols": {
+    "robux": "â£",
+    "usd": "$"
+  }
+}
