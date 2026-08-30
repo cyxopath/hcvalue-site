@@ -1,13 +1,11 @@
 // status-bot.js — HC Value Discord Status Bot
-// Pings the site every 5 minutes and updates a Discord channel message with 🟢 or 🔴
+// Renames a voice channel to 🟢 or 🔴 based on whether the site is up
 
 const https = require('https');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID;
+const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID; // Your voice channel ID
 const SITE_URL = process.env.SITE_URL || 'https://hcvalue-site-production.up.railway.app';
-
-let statusMessageId = null;
 
 function discordRequest(method, path, body) {
   return new Promise((resolve, reject) => {
@@ -49,20 +47,12 @@ async function updateStatus() {
   const isUp = await checkSite();
   const now = new Date().toLocaleString('en-GB', { timeZone: 'Europe/Amsterdam' });
 
-  const content = isUp
-    ? `🟢 **HC Value is ONLINE**\nLast checked: ${now}`
-    : `🔴 **HC Value is OFFLINE**\nLast checked: ${now}`;
+  // Rename the voice channel to show the status dot
+  const newName = isUp ? '🟢 HC Value Online' : '🔴 HC Value Offline';
 
   try {
-    if (statusMessageId) {
-      await discordRequest('PATCH', `/channels/${STATUS_CHANNEL_ID}/messages/${statusMessageId}`, { content });
-      console.log(`[${now}] Status updated: ${isUp ? 'ONLINE' : 'OFFLINE'}`);
-    } else {
-      // Send first message and save its ID so we edit it every time (keeps channel clean)
-      const msg = await discordRequest('POST', `/channels/${STATUS_CHANNEL_ID}/messages`, { content });
-      statusMessageId = msg.id;
-      console.log(`[${now}] Status message created: ${statusMessageId}`);
-    }
+    await discordRequest('PATCH', `/channels/${STATUS_CHANNEL_ID}`, { name: newName });
+    console.log(`[${now}] Channel renamed to: ${newName}`);
   } catch (err) {
     console.error('Discord API error:', err);
   }
