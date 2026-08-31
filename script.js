@@ -1023,6 +1023,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnCancel       = document.getElementById('roblox-btn-cancel');
     const btnConfirm      = document.getElementById('roblox-btn-confirm');
 
+    let resolvedUser = null; // declared early to avoid TDZ when openConnectModal/logoutUser run before line 2298
+
     /* ── Dev Access / Session Logic ──────────────────────── */
     const modalCloseBtnEl = document.getElementById('roblox-modal-close');
     const savedDevKey = localStorage.getItem('dev_key');
@@ -2294,8 +2296,6 @@ document.addEventListener('DOMContentLoaded', async () => {
        (DOM refs were moved earlier to avoid TDZ on refresh)
        ───────────────────────────────────────────────────────── */
     const modalCloseBtn = document.getElementById('roblox-modal-close');
-    
-    let resolvedUser = null;
 
     function getApiUrl(path) {
         // Use the current domain so it works both locally and via Cloudflare Tunnel on mobile/web
