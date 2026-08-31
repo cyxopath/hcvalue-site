@@ -594,13 +594,210 @@ app.get('/api/roblox/resolve', async (req, res) => {
     }
 });
 
+/* ── Roblox OAuth 2.0 Authentication ──────────────────────────────── */
+const robloxStates = new Map();
+setInterval(() => {
+    const now = Date.now();
+    for (const [state, data] of robloxStates.entries()) {
+        if (data.expiresAt < now) robloxStates.delete(state);
+    }
+}, 60 * 1000);
+
+/* Initiate Roblox OAuth login */
+app.get('/api/auth/roblox/login', (req, res) => {
+    const clientId = (process.env.ROBLOX_CLIENT_ID || '').trim();
+    if (!clientId) {
+        return res.status(500).send('Roblox Client ID is not configured on the server.');
+    }
+
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host') || 'localhost:8000';
+    let redirectUri = `${protocol}://${host}/api/auth/roblox/callback`;
+    if (process.env.ROBLOX_REDIRECT_URI && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        redirectUri = process.env.ROBLOX_REDIRECT_URI.trim();
+    }
+
+    const state = crypto.randomBytes(24).toString('hex');
+    robloxStates.set(state, {
+        expiresAt: Date.now() + 10 * 60 * 1000
+    });
+
+    const robloxAuthUrl = `https://apis.roblox.com/oauth/v1/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20profile&state=${state}&prompt=select_account%20consent`;
+    res.redirect(robloxAuthUrl);
+});
+
+/* Roblox OAuth callback */
+app.get('/api/auth/roblox/callback', async (req, res) => {
+    const { code, state, error } = req.query;
+    if (error) {
+        return res.redirect(`/?roblox_error=${encodeURIComponent(error)}`);
+    }
+    if (!state || !robloxStates.has(state)) {
+        return res.redirect('/?roblox_error=invalid_state');
+    }
+
+    const stateData = robloxStates.get(state);
+    robloxStates.delete(state);
+
+    if (Date.now() > stateData.expiresAt) {
+        return res.redirect('/?roblox_error=state_expired');
+    }
+
+    const clientId = (process.env.ROBLOX_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.ROBLOX_CLIENT_SECRET || '').trim();
+    if (!clientId || !clientSecret) {
+        return res.redirect('/?roblox_error=missing_credentials');
+    }
+
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host') || 'localhost:8000';
+    let redirectUri = `${protocol}://${host}/api/auth/roblox/callback`;
+    if (process.env.ROBLOX_REDIRECT_URI && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        redirectUri = process.env.ROBLOX_REDIRECT_URI.trim();
+    }
+
+    try {
+        const formBody = new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: 'authorization_code',
+            code: String(code),
+            redirect_uri: redirectUri
+        }).toString();
+
+        const tokenRes = await httpsRequest('https://apis.roblox.com/oauth/v1/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formBody
+        });
+
+        if (tokenRes.statusCode !== 200 || !tokenRes.body || !tokenRes.body.access_token) {
+            console.error('[Roblox OAuth] Token exchange error:', tokenRes.body);
+            const errMsg = tokenRes.body?.error_description || tokenRes.body?.error || 'token_exchange_failed';
+            return res.redirect(`/?roblox_error=${encodeURIComponent(errMsg)}`);
+        }
+
+        const accessToken = tokenRes.body.access_token;
+
+        // Fetch User Info from Roblox OpenID UserInfo endpoint
+        const userInfoRes = await httpsRequest('https://apis.roblox.com/oauth/v1/userinfo', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (userInfoRes.statusCode !== 200 || !userInfoRes.body || !userInfoRes.body.sub) {
+            console.error('[Roblox OAuth] UserInfo error:', userInfoRes.body);
+            return res.redirect('/?roblox_error=failed_to_fetch_user_info');
+        }
+
+        const userInfo = userInfoRes.body;
+        const userId = Number(userInfo.sub);
+        const username = userInfo.preferred_username || userInfo.name || `User_${userId}`;
+        const displayName = userInfo.nickname || userInfo.name || username;
+
+        // Blocklist check
+        if (isUserBlocked(userId, username)) {
+            return res.redirect('/?roblox_error=blacklisted');
+        }
+
+        // Account-age gate check (fetch user profile from public API)
+        try {
+            const profile = await httpsGet(`https://users.roblox.com/v1/users/${userId}`);
+            if (profile && profile.created) {
+                const created = new Date(profile.created);
+                const ageDays = (Date.now() - created.getTime()) / 86_400_000;
+                if (ageDays < 30) {
+                    return res.redirect(`/?roblox_error=account_too_new_must_be_30_days_old`);
+                }
+            }
+        } catch (_) {}
+
+        // Fetch avatar thumbnail headshot
+        let avatarUrl = userInfo.picture || null;
+        if (!avatarUrl) {
+            try {
+                const av = await httpsGet(
+                    `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
+                );
+                avatarUrl = av.data?.[0]?.imageUrl || null;
+            } catch (_) {}
+        }
+
+        const isAdmin = Number(userId) === ADMIN_USER_ID;
+
+        // Clean up any existing sessions for this user ID
+        for (const [t, s] of userSessions.entries()) {
+            if (Number(s.userId) === Number(userId)) {
+                userSessions.delete(t);
+                activeSessions.delete(t);
+            }
+        }
+
+        const userToken = crypto.randomBytes(32).toString('hex');
+        const userObj = {
+            id: userId,
+            username: username,
+            displayName: displayName,
+            avatarUrl: avatarUrl || 'assets/placeholder-roblox.png',
+            loginTime: Date.now(),
+            isAdmin: isAdmin
+        };
+
+        const newSession = {
+            token: userToken,
+            userId: userId,
+            username: username,
+            displayName: displayName,
+            avatarUrl: avatarUrl || 'assets/placeholder-roblox.png',
+            loginTime: Date.now(),
+            expiresAt: Date.now() + SESSION_TTL_MS,
+            isAdmin: isAdmin
+        };
+        persistSession(newSession);
+
+        if (isAdmin) {
+            activeSessions.add(userToken);
+        }
+        setSessionCookie(req, res, userToken);
+
+        // Save/update combined profile in discord-links.json
+        try {
+            const allLinks = loadDiscordLinks();
+            const existingLink = allLinks[String(userId)] || {};
+            allLinks[String(userId)] = {
+                ...existingLink,
+                robloxUserId: userId,
+                robloxUsername: username,
+                robloxDisplayName: displayName,
+                robloxAvatar: avatarUrl || 'assets/placeholder-roblox.png',
+                robloxLinkedAt: existingLink.robloxLinkedAt || new Date().toISOString(),
+                lastLoginAt: new Date().toISOString()
+            };
+            saveDiscordLinks(allLinks);
+        } catch (e) {
+            console.warn('[Roblox OAuth] Failed to save link to discord-links.json:', e);
+        }
+
+        const safeUserJson = encodeURIComponent(JSON.stringify(userObj));
+        return res.redirect(`/?roblox_success=1&roblox_token=${encodeURIComponent(userToken)}&roblox_user=${safeUserJson}`);
+
+    } catch (err) {
+        console.error('[Roblox OAuth] Callback error:', err);
+        return res.redirect(`/?roblox_error=${encodeURIComponent(err.message || 'unknown_error')}`);
+    }
+});
+
 /* ── Verify words list ─────────────────────────────────────────── */
 app.get('/api/verify-words', (req, res) => {
     const words = loadJSON(VERIFY_WORDS_FILE, []);
     res.json(words);
 });
 
-/* ── Roblox: verify bio phrase ───────────────────────────────────── */
+/* ── Roblox: verify bio phrase (fallback) ────────────────────────── */
 app.get('/api/roblox/verify', async (req, res) => {
     const { userId, phrase } = req.query;
     if (!userId || !phrase) {
@@ -690,7 +887,7 @@ function getDiscordConfig() {
     return {
         enabled: (cfg.discordEnabled !== undefined ? Boolean(cfg.discordEnabled) : true) && hasOAuthKeys,
         guildId: String(cfg.discordGuildId || '1405216941383094376').trim(),
-        inviteLink: String(cfg.discordInviteLink || 'https://discord.com/invite/zJMVj8yE9U').trim()
+        inviteLink: String(cfg.discordInviteLink || 'https://discord.gg/PQPM4sYBc4').trim()
     };
 }
 
@@ -710,7 +907,7 @@ async function getDiscordServerInfo() {
     }
 
     try {
-        let code = 'zJMVj8yE9U';
+        let code = 'PQPM4sYBc4';
         if (cfg.inviteLink) {
             const match = cfg.inviteLink.match(/(?:discord\.gg|discord\.com\/invite)\/([a-zA-Z0-9-]+)/i);
             if (match && match[1]) code = match[1];
@@ -756,7 +953,9 @@ function getDiscordLinkForUser(userId) {
 
 function saveDiscordLinkForUser(userId, discordData) {
     const links = loadDiscordLinks();
+    const existing = links[String(userId)] || {};
     links[String(userId)] = {
+        ...existing,
         robloxUserId: Number(userId),
         ...discordData,
         updatedAt: new Date().toISOString()
@@ -979,10 +1178,11 @@ app.get('/api/auth/discord/login', (req, res) => {
         return res.status(500).send('Discord Client ID is not configured on the server. Set DISCORD_CLIENT_ID in .env file.');
     }
 
-    let redirectUri = (process.env.DISCORD_REDIRECT_URI || '').trim();
-    if (!redirectUri) {
-        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-        redirectUri = `${protocol}://${req.get('host')}/api/auth/discord/callback`;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host') || 'localhost:8000';
+    let redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+    if (process.env.DISCORD_REDIRECT_URI && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        redirectUri = process.env.DISCORD_REDIRECT_URI.trim();
     }
 
     const state = crypto.randomBytes(24).toString('hex');
@@ -992,6 +1192,7 @@ app.get('/api/auth/discord/login', (req, res) => {
         expiresAt: Date.now() + 10 * 60 * 1000
     });
 
+    console.log(`[Discord OAuth] Login initiating with redirectUri: ${redirectUri}`);
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds&state=${state}&prompt=consent`;
     res.redirect(discordAuthUrl);
 });
@@ -1019,10 +1220,11 @@ app.get('/api/auth/discord/callback', async (req, res) => {
         return res.redirect('/?discord_error=missing_credentials');
     }
 
-    let redirectUri = (process.env.DISCORD_REDIRECT_URI || '').trim();
-    if (!redirectUri) {
-        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-        redirectUri = `${protocol}://${req.get('host')}/api/auth/discord/callback`;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host') || 'localhost:8000';
+    let redirectUri = `${protocol}://${host}/api/auth/discord/callback`;
+    if (process.env.DISCORD_REDIRECT_URI && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        redirectUri = process.env.DISCORD_REDIRECT_URI.trim();
     }
 
     try {

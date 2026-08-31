@@ -3366,3 +3366,332 @@ footer {
 }
 
 
+/* ── AUTH WIZARD STEP CARD (ALL-IN-ONE 3-STEP FLOW) ── */
+.auth-wizard-card {
+    width: 92%;
+    max-width: 430px;
+    padding: 2.2rem 1.8rem 1.6rem !important;
+    background: rgba(14, 16, 26, 0.88) !important;
+    backdrop-filter: blur(28px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 30px 70px -10px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 45px rgba(155, 93, 229, 0.12) !important;
+    animation: cardPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardPopIn {
+    0% { transform: translateY(20px) scale(0.96); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.auth-card-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+}
+
+.auth-card-header .roblox-modal-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(99, 102, 241, 0.12));
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
+    color: #c084fc;
+}
+
+.auth-card-header .roblox-modal-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin-top: 0.2rem;
+}
+
+.auth-card-header .roblox-modal-sub {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.45;
+}
+
+.auth-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-bottom: 1.2rem;
+}
+
+.auth-step-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: left;
+}
+
+.auth-step-row.active {
+    border-color: rgba(168, 85, 247, 0.55);
+    background: linear-gradient(145deg, rgba(168, 85, 247, 0.09) 0%, rgba(20, 22, 38, 0.7) 100%);
+    box-shadow: 0 4px 24px rgba(168, 85, 247, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.auth-step-row.completed {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.05) 0%, rgba(14, 22, 18, 0.4) 100%);
+    padding: 0.7rem 1rem;
+}
+
+.auth-step-row.locked {
+    opacity: 0.38;
+    background: rgba(255, 255, 255, 0.012);
+    border-color: rgba(255, 255, 255, 0.03);
+    filter: grayscale(40%);
+}
+
+.auth-step-row-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.auth-step-badge {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.45);
+    transition: all 0.28s ease;
+}
+
+.auth-step-row.active .auth-step-badge {
+    background: #a855f7;
+    border-color: #c084fc;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+}
+
+.auth-step-row.completed .auth-step-badge {
+    background: #22c55e;
+    border-color: #4ade80;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
+}
+
+.auth-step-badge-check {
+    display: none;
+}
+
+.auth-step-row.completed .auth-step-badge-num {
+    display: none;
+}
+
+.auth-step-row.completed .auth-step-badge-check {
+    display: block;
+}
+
+.auth-step-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.auth-step-row-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+
+.auth-step-row.locked .auth-step-row-title {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.auth-step-row-desc {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.42);
+    margin-top: 0.1rem;
+}
+
+/* Action Buttons within Rows */
+.auth-step-row-action {
+    width: 100%;
+}
+
+.auth-step-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    width: 100%;
+    height: 40px;
+    border-radius: 100px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    border: none;
+    letter-spacing: -0.01em;
+}
+
+.auth-step-btn:active {
+    transform: scale(0.97) !important;
+}
+
+.auth-step-btn.roblox-btn {
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+}
+
+.auth-step-btn.roblox-btn:hover:not(.disabled) {
+    background: linear-gradient(135deg, #b56df8 0%, #9e44f0 100%);
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 24px rgba(168, 85, 247, 0.55);
+}
+
+.auth-step-btn.discord-btn {
+    background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(88, 101, 242, 0.35);
+}
+
+.auth-step-btn.discord-btn:hover:not(.disabled) {
+    background: linear-gradient(135deg, #6975f5 0%, #515cd4 100%);
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 24px rgba(88, 101, 242, 0.55);
+}
+
+.auth-step-btn.join-btn {
+    background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(88, 101, 242, 0.35);
+    flex: 1;
+}
+
+.auth-step-btn.join-btn:hover:not(.disabled) {
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 24px rgba(88, 101, 242, 0.55);
+}
+
+.auth-step-btn.check-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #fff;
+    width: auto;
+    padding: 0 1.1rem;
+}
+
+.auth-step-btn.check-btn:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.auth-step-btn.disabled {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.step-3-btn-group {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+/* Completed Pill */
+.auth-step-completed-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 100px;
+    font-size: 0.76rem;
+    width: fit-content;
+}
+
+.auth-chip-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.auth-chip-name {
+    color: #fff;
+    font-weight: 700;
+}
+
+.auth-chip-tag {
+    color: #4ade80;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+/* Footer elements */
+.auth-card-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.4rem;
+}
+
+.auth-card-poll-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.live-pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    animation: livePulse 1.5s infinite;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.auth-card-support-link {
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 0.74rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.auth-card-support-link:hover {
+    color: #c084fc;
+    text-decoration: underline;
+}
+
