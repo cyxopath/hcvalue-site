@@ -164,7 +164,7 @@ app.use((req, res, next) => {
     }
 
     // Whitelisted root files & paths
-    if (reqPath === '' || reqPath === 'script.js' || reqPath === 'index.css' || reqPath === 'ads.txt' || reqPath === 'robots.txt' || reqPath === 'sitemap.xml') {
+    if (reqPath === '' || reqPath === 'script.js' || reqPath === 'index.css' || reqPath === 'ads.txt' || reqPath === 'robots.txt' || reqPath === 'sitemap.xml' || reqPath.endsWith('.ttf') || reqPath.endsWith('.woff') || reqPath.endsWith('.woff2') || reqPath.endsWith('.otf')) {
         return next();
     }
 
@@ -174,7 +174,7 @@ app.use((req, res, next) => {
     }
 
     // Whitelisted directories
-    if (reqPath.startsWith('images/') || reqPath.startsWith('gifs/') || reqPath.startsWith('videos/')) {
+    if (reqPath.startsWith('images/') || reqPath.startsWith('gifs/') || reqPath.startsWith('videos/') || reqPath.startsWith('fonts/')) {
         return next();
     }
 
@@ -187,7 +187,8 @@ app.use((req, res, next) => {
     return res.status(403).send('Forbidden');
 });
 
-// Serve static files from the same directory
+// Serve static files
+app.use('/fonts', express.static(path.join(__dirname, 'fonts')));
 app.use(express.static(__dirname));
 
 /* ── JSON helpers ────────────────────────────────────────────────── */

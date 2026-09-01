@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const navLinkPrices = document.getElementById('navlink-prices');
     const navLinkAdmin = document.getElementById('navlink-admin');
     const navHomeLogo = document.getElementById('nav-home-logo');
-    const allNavLinks = document.querySelectorAll('.nav-link');
+    const allNavLinks = document.querySelectorAll('.nav-link, .di-link');
 
     // Admin Specific
     const adminSection = document.getElementById('admin-section');
@@ -424,6 +424,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Tier 1 (Base Mod)', 
             usd: ' N/A', 
             customIcon: true,
+            customImg: 'images/Moderator.png',
             features: {
                 inGame: [
                     { label: 'Spectate' },
@@ -444,6 +445,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Tier 2', 
             usd: ' N/A', 
             customIcon: true,
+            customImg: 'images/Moderator.png',
             features: {
                 inGame: [
                     { label: '(All Tier 1 Mod Features)' },
@@ -461,6 +463,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: 'Tier 3', 
             usd: ' N/A', 
             customIcon: true,
+            customImg: 'images/Moderator.png',
             features: {
                 inGame: [
                     { label: '(All Tier 1+2 Mod Features)' },
@@ -546,12 +549,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     })();
 
     /* ── Smooth scroll within a panel element ─────────────── */
-    function smoothScrollPanel(panel, targetY, duration = 580) {
+    function smoothScrollPanel(panel, targetY, duration = 240) {
         const startY = panel.scrollTop;
         const distance = targetY - startY;
+        if (Math.abs(distance) < 2) return;
         const startTime = performance.now();
         function ease(t) {
-            return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         }
         function step(now) {
             const progress = Math.min((now - startTime) / duration, 1);
@@ -658,7 +662,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     discoverBtn.addEventListener('click', () => {
         // catalog.offsetTop is relative to left-panel
         const targetY = catalog.offsetTop - 60; // subtract nav height
-        smoothScrollPanel(leftPanel, targetY, 580);
+        smoothScrollPanel(leftPanel, targetY, 240);
         setActiveNavLink('values');
         activeView = 'values';
     });
@@ -667,10 +671,31 @@ document.addEventListener('DOMContentLoaded', async () => {
        NAV: Home / Values → slide back to LEFT panel
     ───────────────────────────────────────────────────────── */
     /* ─────────────────────────────────────────────────────────
-       NAVIGATION STATE MACHINE — single setView() keeps
-       panels in sync and eliminates blank-screen glitches.
+       NAVIGATION STATE MACHINE — directional setView() keeps
+       panels in sync and slides smoothly based on tab position.
     ───────────────────────────────────────────────────────── */
+    const VIEW_ORDER = {
+        'home': 0,
+        'values': 1,
+        'exclusive': 2,
+        'prices': 3,
+        'admin': 4
+    };
+    let currentViewIndex = 0;
+
+    function applySlideAnimation(el, isMovingRight) {
+        if (!el) return;
+        el.classList.remove('view-slide-from-right', 'view-slide-from-left');
+        void el.offsetWidth; // trigger reflow
+        el.classList.add(isMovingRight ? 'view-slide-from-right' : 'view-slide-from-left');
+    }
+
     function setView(view) {
+        const prevIndex = currentViewIndex;
+        const newIndex = VIEW_ORDER[view] !== undefined ? VIEW_ORDER[view] : 0;
+        const isMovingRight = newIndex >= prevIndex;
+        currentViewIndex = newIndex;
+
         activeView = view;
         setActiveNavLink(view);
         const rightPanel = document.getElementById('right-panel');
@@ -696,9 +721,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (view === 'exclusive') {
-            // Slide right panel in — left panel untouched, stays exactly as-is
-            if (rightPanel) rightPanel.classList.add('exclusive-active');
-            if (rightPanel) rightPanel.scrollTop = 0;
+            if (rightPanel) {
+                if (!rightPanel.classList.contains('exclusive-active')) {
+                    // Prepare entrance position based on source tab direction
+                    rightPanel.style.transition = 'none';
+                    rightPanel.style.transform = isMovingRight ? 'translateX(100%)' : 'translateX(-100%)';
+                    void rightPanel.offsetWidth;
+                    rightPanel.style.transition = '';
+                }
+                rightPanel.classList.add('exclusive-active');
+                rightPanel.scrollTop = 0;
+            }
 
             if (siteData) {
                 if (!exclBuilt) {
@@ -713,8 +746,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (exclEmptyState)   exclEmptyState.style.display   = 'none';
 
         } else {
-            // Hide the right panel overlay for all other views
-            if (rightPanel) rightPanel.classList.remove('exclusive-active');
+            // Hide the right panel overlay for all other views with smooth directional exit
+            if (rightPanel && rightPanel.classList.contains('exclusive-active')) {
+                rightPanel.style.transform = (newIndex < 2) ? 'translateX(100%)' : 'translateX(-100%)';
+                rightPanel.classList.remove('exclusive-active');
+            }
 
             if (view === 'prices') {
                 landing.style.display         = 'none';
@@ -722,7 +758,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('categories-section').style.display = 'none';
                 document.getElementById('items-section').style.display      = 'none';
                 adminSection.style.display    = 'none';
-                document.getElementById('prices-section').style.display    = '';
+                const pricesSec = document.getElementById('prices-section');
+                pricesSec.style.display    = '';
+                applySlideAnimation(pricesSec, isMovingRight);
                 leftPanel.scrollTop = 0;
 
                 refreshPricesView();
@@ -742,6 +780,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.getElementById('categories-section').style.display = 'none';
                     document.getElementById('items-section').style.display      = 'none';
                     adminSection.style.display    = '';
+                    applySlideAnimation(adminSection, isMovingRight);
                     leftPanel.scrollTop = 0;
 
                     const chartWrap = document.getElementById('traffic-chart');
@@ -785,7 +824,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     if (view === 'home') {
                         document.getElementById('items-section').style.display = 'none';
-                        smoothScrollPanel(leftPanel, 0, 420);
+                        if (prevIndex === 1) {
+                            smoothScrollPanel(leftPanel, 0, 200);
+                        } else {
+                            applySlideAnimation(landing, isMovingRight);
+                            leftPanel.scrollTop = 0;
+                        }
+                    } else if (view === 'values') {
+                        if (prevIndex === 0) {
+                            const targetY = catalog.offsetTop - 60;
+                            smoothScrollPanel(leftPanel, targetY, 220);
+                        } else {
+                            applySlideAnimation(catalog, isMovingRight);
+                            const targetY = catalog.offsetTop - 60;
+                            leftPanel.scrollTop = targetY;
+                        }
                     }
                 }
             }
@@ -1242,7 +1295,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     
                     renderUserNavbar(valData.discord);
-                    checkPricesAccess();
+                    const pricesData = await checkPricesAccess();
+                    populateDICentre(isUserAdmin, !!(pricesData && pricesData.allowed));
                     closeConnectModal();
                     handleDiscordGating(valData.discord, u);
                 } else {
@@ -1826,7 +1880,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         moveUnderline(el);
     }
     function moveUnderline(el) {
-        const container = document.querySelector('.nav-links');
+        if (!navUnderline || !el) return;
+        const container = el.closest('.di-nav') || document.querySelector('.nav-links');
+        if (!container) return;
         const cr = container.getBoundingClientRect();
         const er = el.getBoundingClientRect();
         navUnderline.style.left = (er.left - cr.left) + 'px';
@@ -2024,12 +2080,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderExclusiveAll() {
         const allItems = collectExclusiveItems(null);
-        displayExclusiveItems(allItems, 'All Exclusive Items');
+        displayExclusiveItems(allItems, 'Exclusive Items', 'Items that cannot be purchased with Robux');
     }
 
     function renderExclusiveByCategory(catName) {
         const items = collectExclusiveItems(catName);
-        displayExclusiveItems(items, `${catName} — Exclusives`);
+        displayExclusiveItems(items, `${catName} Exclusives`, `Browse ${catName.toLowerCase()} exclusive skins`);
     }
 
     function collectExclusiveItems(filterCat) {
@@ -2072,20 +2128,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         return result;
     }
 
-    function displayExclusiveItems(list, title) {
-        exclCatTitle.textContent = title;
-        exclCountLabel.textContent = `${list.length} exclusive item${list.length !== 1 ? 's' : ''}`;
-        exclItemsHeader.style.display = '';
-        exclEmptyState.style.display = 'none';
-        exclItemsGrid.innerHTML = '';
-
-        if (list.length === 0) {
-            exclEmptyState.style.display = '';
-            return;
+    function displayExclusiveItems(list, title, subtitle) {
+        if (exclCatTitle) exclCatTitle.textContent = title;
+        if (exclCountLabel) exclCountLabel.textContent = subtitle ? `${subtitle} • ${list.length} item${list.length !== 1 ? 's' : ''}` : `${list.length} exclusive item${list.length !== 1 ? 's' : ''}`;
+        if (exclEmptyState) exclEmptyState.style.display = list.length === 0 ? '' : 'none';
+        if (exclItemsGrid) {
+            exclItemsGrid.innerHTML = '';
+            list.forEach(({ name, details, category }, i) =>
+                exclItemsGrid.appendChild(makeCard(name, details, i, true, false, category))
+            );
         }
-        list.forEach(({ name, details, category }, i) =>
-            exclItemsGrid.appendChild(makeCard(name, details, i, true, false, category))
-        );
     }
 
     /* ─────────────────────────────────────────────────────────
@@ -2156,6 +2208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function makeCard(name, details, index, forceExclusive = false, isTrending = false, catName = '') {
         const card = document.createElement('div');
         card.className = 'item-card';
+        card.dataset.itemName = name.toLowerCase().trim();
         card.style.animationDelay = `${Math.min(index * 0.04, 0.55)}s`;
 
         // ── Image for the card header ──
@@ -2486,11 +2539,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.removeItem('dev_key');
         if (navLinkAdmin) navLinkAdmin.style.display = 'none'; // hide Admin view link
         goLeft('home'); // securely redirect to home view
+        populateDICentre(false, false);
         renderUserNavbar();
         
-        // Hide page wrapper and global nav, and display the connect modal
+        // Hide page wrapper and dynamic island, and display the connect modal
         document.getElementById('page-wrapper').style.display = 'none';
-        document.getElementById('global-nav').style.display = 'none';
+        document.getElementById('dynamic-island').style.display = 'none';
         const modalCloseBtnEl = document.getElementById('roblox-modal-close');
         if (modalCloseBtnEl) modalCloseBtnEl.style.display = 'none';
         openConnectModal();
@@ -2555,16 +2609,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const widget = document.getElementById('user-profile-widget');
             const dropdown = document.getElementById('user-dropdown-menu');
-            widget.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('active');
-            });
             
-            document.getElementById('roblox-btn-logout').addEventListener('click', async (e) => {
-                e.stopPropagation();
-                await logoutUser();
-            });
+            if (widget && dropdown) {
+                // Click toggles the big profile card (works on desktop + mobile)
+                widget.addEventListener('click', (e) => {
+                    if (e.target.closest('#user-dropdown-menu')) return;
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                });
+                // Clicking inside the card doesn't close it
+                dropdown.addEventListener('click', (e) => e.stopPropagation());
+            }
             
+            const logoutBtn = document.getElementById('roblox-btn-logout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await logoutUser();
+                });
+            }
+            
+            // Click anywhere else closes the card
             document.addEventListener('click', () => {
                 if (dropdown) dropdown.classList.remove('active');
             });
@@ -2584,6 +2649,76 @@ document.addEventListener('DOMContentLoaded', async () => {
                     openConnectModal();
                 });
             }
+        }
+    }
+
+    /**
+     * Populate the Dynamic Island centre zone based on access flags.
+     * @param {boolean} isAdmin  - user has admin access
+     * @param {boolean} hasPrices - user has prices access
+     */
+    function populateDICentre(isAdmin, hasPrices) {
+        const centre = document.getElementById('di-centre');
+        if (!centre) return;
+        centre.innerHTML = '';
+        centre.classList.remove('has-both', 'revealed');
+
+        if (!isAdmin && !hasPrices) return; // nothing to show
+
+        if (isAdmin && hasPrices) {
+            // Both: show Admin by default, reveal Price on hover/tap
+            centre.classList.add('has-both');
+
+            const adminBtn = document.createElement('button');
+            adminBtn.className = 'di-admin-btn';
+            adminBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Admin View`;
+            adminBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetValuesToTrending();
+                setView('admin');
+            });
+            // Mobile tap: toggle price reveal
+            adminBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                centre.classList.toggle('revealed');
+            }, { passive: false });
+
+            const priceBtn = document.createElement('button');
+            priceBtn.className = 'di-price-btn';
+            priceBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Prices`;
+            priceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                centre.classList.remove('revealed');
+                resetValuesToTrending();
+                setView('prices');
+            });
+
+            centre.appendChild(adminBtn);
+            centre.appendChild(priceBtn);
+
+        } else if (isAdmin) {
+            // Admin only
+            const adminBtn = document.createElement('button');
+            adminBtn.className = 'di-admin-btn';
+            adminBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Admin View`;
+            adminBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetValuesToTrending();
+                setView('admin');
+            });
+            centre.appendChild(adminBtn);
+
+        } else if (hasPrices) {
+            // Prices only
+            const priceBtn = document.createElement('button');
+            priceBtn.className = 'di-price-btn';
+            priceBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Prices`;
+            priceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetValuesToTrending();
+                setView('prices');
+            });
+            centre.appendChild(priceBtn);
         }
     }
 
@@ -2880,7 +3015,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             stopDiscordPolling();
             AuthWizard.close();
             document.getElementById('page-wrapper').style.display = 'block';
-            document.getElementById('global-nav').style.display = 'flex';
+            document.getElementById('dynamic-island').style.display = 'flex';
             return true;
         }
 
@@ -2888,7 +3023,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!discord.connected) {
             stopDiscordPolling();
             document.getElementById('page-wrapper').style.display = 'none';
-            document.getElementById('global-nav').style.display = 'none';
+            document.getElementById('dynamic-island').style.display = 'none';
 
             AuthWizard.open(2, user, discord);
             return false;
@@ -2897,7 +3032,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Step 3: Not yet in server
         if (!discord.inServer) {
             document.getElementById('page-wrapper').style.display = 'none';
-            document.getElementById('global-nav').style.display = 'none';
+            document.getElementById('dynamic-island').style.display = 'none';
 
             AuthWizard.open(3, user, discord);
 
@@ -2911,7 +3046,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         stopDiscordPolling();
         AuthWizard.close();
         document.getElementById('page-wrapper').style.display = 'block';
-        document.getElementById('global-nav').style.display = 'flex';
+        document.getElementById('dynamic-island').style.display = 'flex';
         return true;
     }
 
@@ -2933,7 +3068,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     stopDiscordPolling();
                     AuthWizard.close();
                     document.getElementById('page-wrapper').style.display = 'block';
-                    document.getElementById('global-nav').style.display = 'flex';
+                    document.getElementById('dynamic-island').style.display = 'flex';
                 } else if (!data.connected) {
                     stopDiscordPolling();
                     initializeSession();

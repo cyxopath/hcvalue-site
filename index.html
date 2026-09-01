@@ -39,25 +39,35 @@
             img.setAttribute('loading', 'eager');
         });
     </script>
-    <!-- ── FIXED NAV (always on top) ──────────────────────── -->
-    <header id="global-nav" style="display:none;">
-        <div class="nav-inner">
-            <a class="nav-logo" href="#" id="nav-home-logo">HC Values</a>
-            <div class="nav-separator"></div>
-            <nav class="nav-links">
-                <a href="#" class="nav-link active" id="navlink-home">Home</a>
-                <a href="#" class="nav-link" id="navlink-values">Values</a>
-                <a href="#" class="nav-link" id="navlink-exclusive">Exclusive</a>
-                <a href="https://www.roblox.com/share?code=dc8105db6038374e83b43a7ef874780a&type=Server" target="_blank" rel="noopener noreferrer" class="nav-link" id="navlink-trading-server" style="color: #a259ff;">Trading Server</a>
-                <a href="#" class="nav-link" id="navlink-prices" style="display:none; color: #4ade80;">Prices</a>
-                <a href="#" class="nav-link" id="navlink-admin" style="display:none; color:var(--accent);">Admin View</a>
-                <div class="nav-underline" id="nav-underline"></div>
-            </nav>
-            <div class="nav-user-area" id="nav-user-area">
-                <!-- Will be dynamically populated by script.js -->
+    <!-- ── DYNAMIC ISLAND HUD ───────────────────────────────── -->
+    <!-- Hidden IDs kept for JS back-compat: navlink-prices, navlink-admin, nav-underline -->
+    <a href="#" id="navlink-prices"  style="display:none;" aria-hidden="true"></a>
+    <a href="#" id="navlink-admin"   style="display:none;" aria-hidden="true"></a>
+    <a href="https://www.roblox.com/share?code=dc8105db6038374e83b43a7ef874780a&type=Server"
+       target="_blank" rel="noopener noreferrer"
+       id="navlink-trading-server"   style="display:none;" aria-hidden="true"></a>
+    <div id="nav-underline"          style="display:none;" aria-hidden="true"></div>
+
+    <div id="dynamic-island" style="display:none;" role="navigation" aria-label="Main navigation">
+        <!-- LEFT: brand + nav links -->
+        <div class="di-left">
+            <div class="di-brand">
+                <img class="di-brand-gif" src="images/hc-customs-cards.png" alt="Hood Customs" draggable="false">
+                <a class="di-brand-text" href="#" id="nav-home-logo">HC <span class="di-brand-highlight">Values</span></a>
             </div>
+            <nav class="di-nav">
+                <a href="#" class="di-link active" id="navlink-home">Home</a>
+                <a href="#" class="di-link" id="navlink-values">Values</a>
+                <a href="#" class="di-link" id="navlink-exclusive">Exclusives</a>
+            </nav>
         </div>
-    </header>
+
+        <!-- CENTRE: Admin / Price access zone — populated by populateDICentre() in script.js -->
+        <div class="di-centre" id="di-centre"></div>
+
+        <!-- RIGHT: Roblox avatar + user dropdown — populated by renderUserNavbar() in script.js -->
+        <div class="di-right" id="nav-user-area"></div>
+    </div>
     <!-- ── HORIZONTAL SLIDE WRAPPER ───────────────────────── -->
     <div id="page-wrapper" style="display:none;">
         <!-- ═══ LEFT PANEL: Home + Values ═══ -->
@@ -79,7 +89,10 @@
                     </script>
                 </div>
                 <div class="hero-content">
-                    <h1 id="site-title">HC Values</h1>
+                    <h1 id="site-title">
+                        <span class="title-main">HOOD CUSTOMS</span>
+                        <span class="title-sub">VALUES</span>
+                    </h1>
                     <p class="hero-sub">The definitive skin value guide. Every item, every price.</p>
                     <button id="discover-btn">
                         <span>Discover Values</span>
@@ -426,23 +439,21 @@
         <!-- ═══ RIGHT PANEL: Exclusive (off-screen) ═══ -->
         <div id="right-panel">
             <div id="excl-inner">
-                <div class="section-header">
-                    <h2>Exclusive Items</h2>
-                    <p>Items that cannot be purchased with Robux</p>
+                <div class="section-header" id="excl-main-header">
+                    <h2 id="excl-cat-title">Exclusive Items</h2>
+                    <p id="excl-count-label">Items that cannot be purchased with Robux</p>
                 </div>
                 <!-- Category filter strip for exclusive -->
                 <div class="category-nav-wrap">
                     <div class="category-nav" id="excl-category-nav"></div>
                 </div>
-                <!-- Results -->
-                <div class="section-header" id="excl-items-header" style="display:none;margin-top:2.5rem;">
-                    <h2 id="excl-cat-title"></h2>
-                    <p id="excl-count-label"></p>
-                </div>
+                <!-- Hidden compatibility element for script.js if referenced -->
+                <div id="excl-items-header" style="display:none;"></div>
                 <div id="excl-empty-state" class="empty-state" style="display:none;">
                     <div class="empty-icon">✦</div>
                     <p>No exclusive items found.</p>
                 </div>
+                <div id="excl-items-grid" class="items-grid-inner"></div>
                 <!-- Moderator Tiers Section -->
                 <div class="section-header" style="margin-top: 4rem;">
                     <h2>In-Game Moderator Tiers</h2>
