@@ -1149,6 +1149,149 @@ app.post('/api/validate-session', async (req, res) => {
     });
 });
 
+/* ── Token-based login (for users who can't use Roblox OAuth) ────── */
+app.post('/api/auth/token-login', (req, res) => {
+    const { token } = req.body || {};
+    if (!token || typeof token !== 'string' || !token.trim()) {
+        return res.json({ success: false, message: 'Token is required.' });
+    }
+    const t = token.trim();
+    if (!userSessions.has(t)) {
+        return res.json({ success: false, message: 'Invalid or expired token.' });
+    }
+    const session = userSessions.get(t);
+    if (!session || isSessionExpired(session)) {
+        userSessions.delete(t);
+        activeSessions.delete(t);
+        saveSessionsToDisk();
+        return res.json({ success: false, message: 'Token has expired.' });
+    }
+    if (isUserBlocked(session.userId, session.username)) {
+        return res.json({ success: false, message: 'Account is blocked.' });
+    }
+    setSessionCookie(req, res, t);
+    return res.json({
+        success: true,
+        token: t,
+        user: {
+            id: session.userId,
+            username: session.username,
+            displayName: session.displayName,
+            avatarUrl: session.avatarUrl,
+            loginTime: session.loginTime,
+            isAdmin: !!session.isAdmin
+        }
+    });
+});
+
+/* ── Admin: generate a manual login token for a user ─────────────── */
+app.post('/api/admin/generate-token', requireAdmin, async (req, res) => {
+    const { robloxUsername, discordId, discordUsername } = req.body || {};
+
+    if (!robloxUsername || !robloxUsername.trim()) {
+        return res.json({ success: false, message: 'robloxUsername is required.' });
+    }
+    if (!discordId || !discordId.trim()) {
+        return res.json({ success: false, message: 'discordId (Discord User ID) is required.' });
+    }
+
+    try {
+        /* 1. Resolve Roblox username → userId + profile */
+        const search = await httpsPost(
+            'https://users.roblox.com/v1/usernames/users',
+            { usernames: [robloxUsername.trim()], excludeBannedUsers: false }
+        );
+        if (!search.data || search.data.length === 0) {
+            return res.json({ success: false, message: `Roblox user "${robloxUsername}" not found.` });
+        }
+        const userId    = search.data[0].id;
+        const username  = search.data[0].name;
+        const displayName = search.data[0].displayName || username;
+
+        /* 2. Block-check */
+        if (isUserBlocked(userId, username)) {
+            return res.json({ success: false, message: `User "${username}" is on the blocklist.` });
+        }
+
+        /* 3. Fetch avatar */
+        let avatarUrl = 'assets/placeholder-roblox.png';
+        try {
+            const av = await httpsGet(
+                `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
+            );
+            if (av.data && av.data[0] && av.data[0].imageUrl) {
+                avatarUrl = av.data[0].imageUrl;
+            }
+        } catch (_) {}
+
+        /* 4. Revoke any existing session for this userId */
+        for (const [existingToken, existingSession] of userSessions.entries()) {
+            if (Number(existingSession.userId) === Number(userId)) {
+                userSessions.delete(existingToken);
+                activeSessions.delete(existingToken);
+                break;
+            }
+        }
+
+        /* 5. Create new session token */
+        const userToken = crypto.randomBytes(32).toString('hex');
+        const isAdmin   = Number(userId) === ADMIN_USER_ID;
+        const newSession = {
+            token:       userToken,
+            userId:      userId,
+            username:    username,
+            displayName: displayName,
+            avatarUrl:   avatarUrl,
+            loginTime:   Date.now(),
+            expiresAt:   Date.now() + SESSION_TTL_MS,
+            isAdmin:     isAdmin,
+            manualToken: true   // flag so you can identify these in the sessions list
+        };
+        persistSession(newSession);
+        if (isAdmin) activeSessions.add(userToken);
+
+        /* 6. Save / update discord-links.json with provided Discord info */
+        try {
+            const allLinks = loadDiscordLinks();
+            const existing = allLinks[String(userId)] || {};
+            allLinks[String(userId)] = {
+                ...existing,
+                robloxUserId:      userId,
+                robloxUsername:    username,
+                robloxDisplayName: displayName,
+                robloxAvatar:      avatarUrl,
+                robloxLinkedAt:    existing.robloxLinkedAt || new Date().toISOString(),
+                lastLoginAt:       new Date().toISOString(),
+                // Store discord info provided by admin
+                discordId:         discordId.trim(),
+                discordUsername:   (discordUsername || '').trim() || existing.discordUsername || '',
+                manualToken:       true
+            };
+            saveDiscordLinks(allLinks);
+        } catch (e) {
+            console.warn('[generate-token] Failed to save discord-links.json:', e);
+        }
+
+        console.log(`[generate-token] Admin generated token for ${username} (${userId}), Discord: ${discordId}`);
+
+        return res.json({
+            success: true,
+            token: userToken,
+            user: {
+                id: userId,
+                username,
+                displayName,
+                avatarUrl
+            },
+            expiresAt: newSession.expiresAt
+        });
+
+    } catch (err) {
+        console.error('[generate-token] Error:', err);
+        return res.json({ success: false, message: 'Error generating token: ' + err.message });
+    }
+});
+
 /* ── Roblox: logout user session ─────────────────────────────────── */
 app.post('/api/logout', (req, res) => {
     const token = req.body?.token || getRequestSessionToken(req);

@@ -1613,6 +1613,153 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderExclusiveAll();
     }
 
+    /* ── Token Login (auth modal) ─────────────────────────────────── */
+    const btnToggleTokenLogin  = document.getElementById('btn-toggle-token-login');
+    const tokenLoginSection    = document.getElementById('token-login-section');
+    const tokenLoginInput      = document.getElementById('token-login-input');
+    const btnSubmitTokenLogin  = document.getElementById('btn-submit-token-login');
+    const tokenLoginError      = document.getElementById('token-login-error');
+
+    if (btnToggleTokenLogin && tokenLoginSection) {
+        btnToggleTokenLogin.addEventListener('click', () => {
+            const isOpen = tokenLoginSection.style.display !== 'none';
+            tokenLoginSection.style.display = isOpen ? 'none' : 'block';
+        });
+    }
+
+    if (btnSubmitTokenLogin) {
+        btnSubmitTokenLogin.addEventListener('click', async () => {
+            const token = (tokenLoginInput?.value || '').trim();
+            if (!token) {
+                if (tokenLoginError) { tokenLoginError.textContent = 'Please paste your token first.'; tokenLoginError.style.display = 'block'; }
+                return;
+            }
+            btnSubmitTokenLogin.disabled = true;
+            btnSubmitTokenLogin.textContent = 'Logging in…';
+            if (tokenLoginError) tokenLoginError.style.display = 'none';
+
+            try {
+                const res  = await fetch('/api/auth/token-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    localStorage.setItem('hc_session_token', data.token);
+                    localStorage.setItem('roblox_user', JSON.stringify(data.user));
+                    if (tokenLoginInput) tokenLoginInput.value = '';
+                    // Trigger full session init to validate, load Discord state, etc.
+                    await initializeSession();
+                } else {
+                    if (tokenLoginError) {
+                        tokenLoginError.textContent = data.message || 'Invalid token. Please contact the admin.';
+                        tokenLoginError.style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                if (tokenLoginError) { tokenLoginError.textContent = 'Network error. Try again.'; tokenLoginError.style.display = 'block'; }
+            }
+            btnSubmitTokenLogin.disabled = false;
+            btnSubmitTokenLogin.textContent = 'Login';
+        });
+
+        // Also allow Enter key in the token input
+        if (tokenLoginInput) {
+            tokenLoginInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') btnSubmitTokenLogin.click();
+            });
+        }
+    }
+
+    /* ── Admin: Generate Token Panel ─────────────────────────────── */
+    const btnGenerateToken       = document.getElementById('admin-btn-generate-token');
+    const gentokenRobloxInput    = document.getElementById('gentoken-roblox-input');
+    const gentokenDiscordIdInput = document.getElementById('gentoken-discord-id-input');
+    const gentokenDiscordName    = document.getElementById('gentoken-discord-name-input');
+    const gentokenResult         = document.getElementById('gentoken-result');
+    const gentokenValue          = document.getElementById('gentoken-value');
+    const gentokenCopyBtn        = document.getElementById('gentoken-copy-btn');
+    const gentokenUserInfo       = document.getElementById('gentoken-user-info');
+    const gentokenExpiresInfo    = document.getElementById('gentoken-expires-info');
+    const gentokenError          = document.getElementById('gentoken-error');
+
+    if (btnGenerateToken) {
+        btnGenerateToken.addEventListener('click', async () => {
+            const robloxUsername = (gentokenRobloxInput?.value || '').trim();
+            const discordId      = (gentokenDiscordIdInput?.value || '').trim();
+            const discordUsername = (gentokenDiscordName?.value || '').trim();
+
+            if (gentokenResult)  gentokenResult.style.display  = 'none';
+            if (gentokenError)   { gentokenError.style.display = 'none'; gentokenError.textContent = ''; }
+
+            if (!robloxUsername) {
+                if (gentokenError) { gentokenError.textContent = 'Roblox username is required.'; gentokenError.style.display = 'block'; }
+                return;
+            }
+            if (!discordId) {
+                if (gentokenError) { gentokenError.textContent = 'Discord User ID is required.'; gentokenError.style.display = 'block'; }
+                return;
+            }
+
+            btnGenerateToken.disabled = true;
+            btnGenerateToken.textContent = 'Generating…';
+
+            try {
+                const res  = await fetch('/api/admin/generate-token', {
+                    method: 'POST',
+                    headers: getAdminHeaders(),
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ robloxUsername, discordId, discordUsername })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    if (gentokenValue)       gentokenValue.textContent = data.token;
+                    if (gentokenUserInfo)    gentokenUserInfo.textContent = `👤 ${data.user.displayName} (@${data.user.username}) — Roblox ID: ${data.user.id}`;
+                    if (gentokenExpiresInfo && data.expiresAt) {
+                        const exp = new Date(data.expiresAt);
+                        gentokenExpiresInfo.textContent = `⏳ Expires: ${exp.toLocaleString()} (30 days)`;
+                    }
+                    if (gentokenResult) gentokenResult.style.display = 'block';
+                    // Clear fields
+                    if (gentokenRobloxInput)    gentokenRobloxInput.value    = '';
+                    if (gentokenDiscordIdInput) gentokenDiscordIdInput.value = '';
+                    if (gentokenDiscordName)    gentokenDiscordName.value    = '';
+                } else {
+                    if (gentokenError) { gentokenError.textContent = data.message || 'Failed to generate token.'; gentokenError.style.display = 'block'; }
+                }
+            } catch (e) {
+                if (gentokenError) { gentokenError.textContent = 'Network error. Try again.'; gentokenError.style.display = 'block'; }
+            }
+            btnGenerateToken.disabled = false;
+            btnGenerateToken.textContent = 'Generate Token';
+        });
+    }
+
+    if (gentokenCopyBtn && gentokenValue) {
+        gentokenCopyBtn.addEventListener('click', () => {
+            const tok = gentokenValue.textContent.trim();
+            if (!tok) return;
+            navigator.clipboard.writeText(tok).then(() => {
+                gentokenCopyBtn.textContent = 'Copied!';
+                setTimeout(() => { gentokenCopyBtn.textContent = 'Copy'; }, 2000);
+            }).catch(() => {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = tok;
+                ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                gentokenCopyBtn.textContent = 'Copied!';
+                setTimeout(() => { gentokenCopyBtn.textContent = 'Copy'; }, 2000);
+            });
+        });
+    }
+
     /* ── Blocklist Logic ─────────────────────────────────────────── */
     const blockInput = document.getElementById('admin-block-input');
     const btnBlock = document.getElementById('admin-btn-block');
