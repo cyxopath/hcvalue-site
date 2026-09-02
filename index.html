@@ -609,17 +609,19 @@
             </div>
 
             <!-- ── Login with Token (for users who can't do OAuth) ── -->
-            <div style="margin-top: 1.1rem; border-top: 1px solid var(--border); padding-top: 1.1rem;">
-                <button id="btn-toggle-token-login" style="background: none; border: none; color: var(--text-3); font-size: 0.8rem; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 0.4rem; font-family: inherit;">
+            <div class="token-login-wrapper">
+                <button id="btn-toggle-token-login" type="button" class="token-toggle-btn">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                    Have a token? Login without Roblox OAuth
+                    <span>Have a token? Login here.</span>
                 </button>
-                <div id="token-login-section" style="display: none; margin-top: 0.85rem;">
-                    <div style="display: flex; gap: 0.6rem; align-items: center;">
-                        <input type="text" id="token-login-input" placeholder="Paste your login token here…" style="flex: 1; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-1); color: var(--text-1); padding: 0.65rem 0.9rem; font-family: monospace; font-size: 0.8rem; outline: none;">
-                        <button id="btn-submit-token-login" class="auth-step-btn roblox-btn" style="flex-shrink: 0; padding: 0 1.1rem; height: 38px; font-size: 0.82rem; border-radius: 8px;">Login</button>
+                <div id="token-login-section" class="token-login-section" style="display: none;">
+                    <div class="token-input-card">
+                        <div class="token-input-row">
+                            <input type="text" id="token-login-input" class="token-login-input" placeholder="Paste login token here…" autocomplete="off" spellcheck="false">
+                            <button id="btn-submit-token-login" type="button" class="token-submit-btn">Login</button>
+                        </div>
+                        <div id="token-login-error" class="token-error-msg" style="display: none;"></div>
                     </div>
-                    <div id="token-login-error" style="display: none; margin-top: 0.55rem; color: #f87171; font-size: 0.78rem;"></div>
                 </div>
             </div>
 
