@@ -14,7 +14,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const discordError = urlParams.get('discord_error');
     const discordSuccess = urlParams.get('discord_success');
 
+    function renderAuthCallbackNotice(title, subtitle, isSuccess) {
+        document.body.innerHTML = `
+            <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #070709; font-family: 'Outfit', sans-serif; color: #f0f0f5; padding: 1.5rem; text-align: center;">
+                <div style="background: rgba(14, 16, 26, 0.94); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 24px; padding: 2.5rem 2rem; max-width: 400px; width: 100%; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 0 0 45px rgba(168, 85, 247, 0.15); animation: cardPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                    <div style="width: 58px; height: 58px; border-radius: 50%; background: ${isSuccess ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)'}; border: 1.5px solid ${isSuccess ? 'rgba(34, 197, 94, 0.45)' : 'rgba(239, 68, 68, 0.45)'}; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 1.6rem; color: ${isSuccess ? '#4ade80' : '#f87171'};">
+                        ${isSuccess ? '✓' : '✕'}
+                    </div>
+                    <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.01em;">${title}</h2>
+                    <p style="font-size: 0.86rem; color: #888899; line-height: 1.5; margin-bottom: 1.5rem;">${subtitle}</p>
+                    <button onclick="window.close()" style="height: 42px; padding: 0 1.6rem; border-radius: 100px; border: none; background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); color: #fff; font-size: 0.84rem; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+                        Close Tab
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
     if (robloxError) {
+        if (window.opener && !window.opener.closed) {
+            try {
+                window.opener.postMessage({ type: 'ROBLOX_AUTH_ERROR', error: robloxError }, '*');
+            } catch (_) {}
+            renderAuthCallbackNotice('Roblox Connection Notice', robloxError.replace(/_/g, ' '), false);
+            return;
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => alert(`Roblox Login Notice: ${robloxError.replace(/_/g, ' ')}`), 300);
     }
@@ -25,13 +49,44 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('roblox_user', decodeURIComponent(robloxUserParam));
             } catch (_) {}
         }
+        localStorage.setItem('roblox_oauth_event', Date.now().toString());
+
+        if (window.opener && !window.opener.closed) {
+            try {
+                window.opener.postMessage({
+                    type: 'ROBLOX_AUTH_SUCCESS',
+                    token: robloxToken,
+                    user: robloxUserParam
+                }, '*');
+            } catch (_) {}
+            renderAuthCallbackNotice('Connected to Roblox!', 'Successfully authenticated. Closing tab...', true);
+            setTimeout(() => { window.close(); }, 700);
+            return;
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
     }
     if (discordError) {
+        if (window.opener && !window.opener.closed) {
+            try {
+                window.opener.postMessage({ type: 'DISCORD_AUTH_ERROR', error: discordError }, '*');
+            } catch (_) {}
+            renderAuthCallbackNotice('Discord Connection Notice', discordError.replace(/_/g, ' '), false);
+            return;
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => alert(`Discord Connection Notice: ${discordError.replace(/_/g, ' ')}`), 300);
     }
     if (discordSuccess) {
+        localStorage.setItem('discord_oauth_event', Date.now().toString());
+
+        if (window.opener && !window.opener.closed) {
+            try {
+                window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS' }, '*');
+            } catch (_) {}
+            renderAuthCallbackNotice('Connected to Discord!', 'Discord account linked. Closing tab...', true);
+            setTimeout(() => { window.close(); }, 700);
+            return;
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
     }
     if (urlKey) {
@@ -1320,10 +1375,65 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Periodic & window focus membership re-check (if user leaves Discord server, kick back to login gate)
     window.addEventListener('focus', () => {
-        if (isLoggedIn) {
+        if (isLoggedIn || localStorage.getItem('hc_session_token')) {
             initializeSession();
         }
     });
+
+    // Listen for postMessage from OAuth popup / new tab
+    window.addEventListener('message', async (e) => {
+        if (e.data && e.data.type === 'ROBLOX_AUTH_SUCCESS') {
+            const { token, user } = e.data;
+            if (token) localStorage.setItem('hc_session_token', token);
+            if (user) {
+                try {
+                    localStorage.setItem('roblox_user', typeof user === 'string' ? decodeURIComponent(user) : JSON.stringify(user));
+                } catch (_) {}
+            }
+            await initializeSession();
+        } else if (e.data && e.data.type === 'DISCORD_AUTH_SUCCESS') {
+            await initializeSession();
+        } else if (e.data && (e.data.type === 'ROBLOX_AUTH_ERROR' || e.data.type === 'DISCORD_AUTH_ERROR')) {
+            const err = e.data.error || 'Authentication error';
+            const modalError = document.getElementById('roblox-modal-error');
+            if (modalError) {
+                modalError.textContent = err.replace(/_/g, ' ');
+                modalError.style.display = 'block';
+            }
+        }
+    });
+
+    // Cross-tab storage synchronization
+    window.addEventListener('storage', async (e) => {
+        if (e.key === 'hc_session_token' || e.key === 'roblox_oauth_event' || e.key === 'discord_oauth_event') {
+            await initializeSession();
+        }
+    });
+
+    // Explicit new tab openers on buttons
+    const btnAuthRobloxEl = document.getElementById('btn-auth-roblox');
+    if (btnAuthRobloxEl) {
+        btnAuthRobloxEl.target = '_blank';
+        btnAuthRobloxEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            const w = window.open('/api/auth/roblox/login', '_blank');
+            if (w) w.focus();
+        });
+    }
+
+    const btnConnectDiscordEl = document.getElementById('btn-connect-discord-oauth');
+    if (btnConnectDiscordEl) {
+        btnConnectDiscordEl.target = '_blank';
+        btnConnectDiscordEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (btnConnectDiscordEl.classList.contains('disabled')) return;
+            const token = localStorage.getItem('hc_session_token') || '';
+            const url = getApiUrl(`/api/auth/discord/login?token=${encodeURIComponent(token)}`);
+            const w = window.open(url, '_blank');
+            if (w) w.focus();
+        });
+    }
+
     setInterval(() => {
         if (isLoggedIn) {
             initializeSession();

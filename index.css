@@ -1360,17 +1360,17 @@ footer {
 
 /* ── ANIMATIONS ─────────────────────────────────────────────── */
 @keyframes heroIn {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(18px); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 @keyframes cardIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes viewSlideFromRight {
     from {
-        opacity: 0.1;
-        transform: translateX(80px);
+        opacity: 0;
+        transform: translateX(35px);
     }
     to {
         opacity: 1;
@@ -1379,8 +1379,8 @@ footer {
 }
 @keyframes viewSlideFromLeft {
     from {
-        opacity: 0.1;
-        transform: translateX(-80px);
+        opacity: 0;
+        transform: translateX(-35px);
     }
     to {
         opacity: 1;
@@ -1388,10 +1388,12 @@ footer {
     }
 }
 .view-slide-from-right {
-    animation: viewSlideFromRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: viewSlideFromRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
 }
 .view-slide-from-left {
-    animation: viewSlideFromLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: viewSlideFromLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
 }
 
 /* ── SCROLLBAR ──────────────────────────────────────────────── */
@@ -1813,7 +1815,10 @@ footer {
     justify-content: center;
     align-items: center;
     opacity: 0;
-    transition: opacity 0.4s var(--ease), backdrop-filter 0.4s var(--ease), -webkit-backdrop-filter 0.4s var(--ease);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                backdrop-filter 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                -webkit-backdrop-filter 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, backdrop-filter;
 }
 
 .modal-overlay.active {
@@ -1832,8 +1837,9 @@ footer {
     padding: 2.5rem 2rem;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(162, 89, 255, 0.08);
     position: relative;
-    transform: translateY(24px) scale(0.96);
-    transition: transform 0.4s var(--ease), opacity 0.4s var(--ease);
+    transform: translateY(18px) scale(0.97);
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
     text-align: center;
 }
 
@@ -3810,8 +3816,8 @@ footer {
 }
 
 @keyframes cardPopIn {
-    0% { transform: translateY(20px) scale(0.96); opacity: 0; }
-    100% { transform: translateY(0) scale(1); opacity: 1; }
+    0% { transform: translateY(16px) scale(0.97); opacity: 0; filter: blur(4px); }
+    100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); }
 }
 
 .auth-card-header {
@@ -3862,7 +3868,12 @@ footer {
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
     text-align: left;
 }
 
@@ -3905,20 +3916,26 @@ footer {
     font-size: 0.76rem;
     font-weight: 800;
     color: rgba(255, 255, 255, 0.45);
-    transition: all 0.28s ease;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background 0.3s ease,
+                border-color 0.3s ease,
+                box-shadow 0.3s ease;
+    will-change: transform;
 }
 
 .auth-step-row.active .auth-step-badge {
     background: #a855f7;
     border-color: #c084fc;
     color: #fff;
-    box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+    transform: scale(1.08);
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.6);
 }
 
 .auth-step-row.completed .auth-step-badge {
     background: #22c55e;
     border-color: #4ade80;
     color: #fff;
+    transform: scale(1);
     box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
 }
 
@@ -3974,7 +3991,11 @@ footer {
     font-weight: 700;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
     border: none;
     letter-spacing: -0.01em;
 }
@@ -3991,7 +4012,7 @@ footer {
 
 .auth-step-btn.roblox-btn:hover:not(.disabled) {
     background: linear-gradient(135deg, #b56df8 0%, #9e44f0 100%);
-    transform: translateY(-1.5px);
+    transform: translateY(-2px);
     box-shadow: 0 6px 24px rgba(168, 85, 247, 0.55);
 }
 
@@ -4003,7 +4024,7 @@ footer {
 
 .auth-step-btn.discord-btn:hover:not(.disabled) {
     background: linear-gradient(135deg, #6975f5 0%, #515cd4 100%);
-    transform: translateY(-1.5px);
+    transform: translateY(-2px);
     box-shadow: 0 6px 24px rgba(88, 101, 242, 0.55);
 }
 
