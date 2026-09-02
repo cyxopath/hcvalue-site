@@ -12,7 +12,7 @@ const path    = require('path');
 const crypto  = require('crypto');
 
 const app  = express();
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 const ADMIN_USER_ID = 1945506007;
 const DATA_ACCESS_COOKIE = 'hc_data_session';
 const SESSION_COOKIE_NAME = 'hc_session_token';
@@ -22,16 +22,24 @@ const SESSION_TTL_MS = SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
 app.disable('x-powered-by');
 
 /* ── File paths (supports persistent volumes like Railway /data) ─── */
-const DATA_DIR = (process.env.DATA_DIR && process.env.DATA_DIR.trim())
-    ? path.resolve(process.env.DATA_DIR.trim())
-    : (fs.existsSync('/data') ? '/data' : __dirname);
+let DATA_DIR = __dirname;
+try {
+    if (process.env.DATA_DIR && process.env.DATA_DIR.trim()) {
+        const customDir = path.resolve(process.env.DATA_DIR.trim());
+        if (!fs.existsSync(customDir)) fs.mkdirSync(customDir, { recursive: true });
+        fs.accessSync(customDir, fs.constants.W_OK);
+        DATA_DIR = customDir;
+    } else if (fs.existsSync('/data')) {
+        fs.accessSync('/data', fs.constants.W_OK);
+        DATA_DIR = '/data';
+    }
+} catch (e) {
+    console.warn('[Storage] Volume directory not writable, falling back to __dirname:', e.message);
+    DATA_DIR = __dirname;
+}
 
 if (DATA_DIR !== __dirname) {
     try {
-        if (!fs.existsSync(DATA_DIR)) {
-            fs.mkdirSync(DATA_DIR, { recursive: true });
-        }
-        // Seed initial files if they don't exist yet in the volume
         const seedFiles = [
             'stats.json', 'blocklist.json', 'data.json', 'trending.json',
             'sessions.json', 'prices-whitelist.json', 'price-suggestions.json',
@@ -46,7 +54,7 @@ if (DATA_DIR !== __dirname) {
         });
         console.log(`[Storage] Using persistent storage at: ${DATA_DIR}`);
     } catch (e) {
-        console.warn(`[Storage] Failed to initialize volume at ${DATA_DIR}, fallback to __dirname:`, e);
+        console.warn(`[Storage] Failed to seed files to ${DATA_DIR}:`, e);
     }
 }
 
