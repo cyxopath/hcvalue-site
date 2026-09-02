@@ -21,16 +21,46 @@ const SESSION_TTL_MS = SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
 
 app.disable('x-powered-by');
 
-/* ── File paths ──────────────────────────────────────────────────── */
-const STATS_FILE     = path.join(__dirname, 'stats.json');
-const BLOCKLIST_FILE = path.join(__dirname, 'blocklist.json');
-const DATA_FILE      = path.join(__dirname, 'data.json');
-const TRENDING_FILE  = path.join(__dirname, 'trending.json');
-const SESSIONS_FILE  = path.join(__dirname, 'sessions.json');
-const PRICES_WHITELIST_FILE = path.join(__dirname, 'prices-whitelist.json');
-const PRICE_SUGGESTIONS_FILE = path.join(__dirname, 'price-suggestions.json');
-const VERIFY_WORDS_FILE = path.join(__dirname, 'verify-words.json');
-const DISCORD_LINKS_FILE = path.join(__dirname, 'discord-links.json');
+/* ── File paths (supports persistent volumes like Railway /data) ─── */
+const DATA_DIR = (process.env.DATA_DIR && process.env.DATA_DIR.trim())
+    ? path.resolve(process.env.DATA_DIR.trim())
+    : (fs.existsSync('/data') ? '/data' : __dirname);
+
+if (DATA_DIR !== __dirname) {
+    try {
+        if (!fs.existsSync(DATA_DIR)) {
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        }
+        // Seed initial files if they don't exist yet in the volume
+        const seedFiles = [
+            'stats.json', 'blocklist.json', 'data.json', 'trending.json',
+            'sessions.json', 'prices-whitelist.json', 'price-suggestions.json',
+            'verify-words.json', 'discord-links.json', 'votes.json'
+        ];
+        seedFiles.forEach(f => {
+            const dest = path.join(DATA_DIR, f);
+            const src  = path.join(__dirname, f);
+            if (!fs.existsSync(dest) && fs.existsSync(src)) {
+                try { fs.copyFileSync(src, dest); } catch (_) {}
+            }
+        });
+        console.log(`[Storage] Using persistent storage at: ${DATA_DIR}`);
+    } catch (e) {
+        console.warn(`[Storage] Failed to initialize volume at ${DATA_DIR}, fallback to __dirname:`, e);
+    }
+}
+
+const STATS_FILE             = path.join(DATA_DIR, 'stats.json');
+const BLOCKLIST_FILE         = path.join(DATA_DIR, 'blocklist.json');
+const DATA_FILE              = path.join(DATA_DIR, 'data.json');
+const TRENDING_FILE          = path.join(DATA_DIR, 'trending.json');
+const SESSIONS_FILE          = path.join(DATA_DIR, 'sessions.json');
+const PRICES_WHITELIST_FILE  = path.join(DATA_DIR, 'prices-whitelist.json');
+const PRICE_SUGGESTIONS_FILE = path.join(DATA_DIR, 'price-suggestions.json');
+const VERIFY_WORDS_FILE      = path.join(DATA_DIR, 'verify-words.json');
+const DISCORD_LINKS_FILE     = path.join(DATA_DIR, 'discord-links.json');
+const VOTES_FILE             = path.join(DATA_DIR, 'votes.json');
+
 const BLOCKED_DIRECT_FILES = new Set([
     'data.json', 'stats.json', 'blocklist.json', 'sessions.json',
     'users.json', 'trending.json', 'price-suggestions.json',
@@ -38,7 +68,6 @@ const BLOCKED_DIRECT_FILES = new Set([
     'package.json', 'server.js', 'votes.json', 'discord-links.json',
     '.env', '.env.example'
 ]);
-const VOTES_FILE = path.join(__dirname, 'votes.json');
 
 /* ── Middleware ──────────────────────────────────────────────────── */
 app.use(express.json());
