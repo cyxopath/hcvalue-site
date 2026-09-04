@@ -432,7 +432,7 @@ function saveSessionsToDisk() {
 }
 
 // Load sessions on startup
-(function loadPersistedSessions() {
+function loadPersistedSessions() {
     const saved = loadJSON(SESSIONS_FILE, []);
     
     // Sort saved sessions by loginTime ascending, so newer ones will process last and override
@@ -459,19 +459,29 @@ function saveSessionsToDisk() {
             }
         }
     });
-    console.log(`  Sessions loaded: ${userSessions.size}`);
-    saveSessionsToDisk();
-})();
+    return userSessions;
+}
+loadPersistedSessions();
+console.log(`  Sessions loaded: ${userSessions.size}`);
+saveSessionsToDisk();
+
+function getActiveSession(token) {
+    if (!token) return null;
+    let s = userSessions.get(token);
+    if (!s) {
+        loadPersistedSessions();
+        s = userSessions.get(token);
+    }
+    return s || null;
+}
 
 /* ── Admin middleware ────────────────────────────────────────────── */
 function requireAdmin(req, res, next) {
     const token = getRequestSessionToken(req);
-    if (token && userSessions.has(token)) {
-        const session = userSessions.get(token);
-        if (session && session.isAdmin && Number(session.userId) === ADMIN_USER_ID) {
-            req.userSession = session;
-            return next();
-        }
+    const session = getActiveSession(token);
+    if (session && session.isAdmin && Number(session.userId) === ADMIN_USER_ID) {
+        req.userSession = session;
+        return next();
     }
     return res.status(403).json({ success: false, message: 'Forbidden: Admin access required.' });
 }
@@ -479,10 +489,10 @@ function requireAdmin(req, res, next) {
 /* ── Prices Access middleware ────────────────────────────────────── */
 function requirePricesAccess(req, res, next) {
     const token = getRequestSessionToken(req);
+    const session = getActiveSession(token);
     
     // Check by token
-    if (token && userSessions.has(token)) {
-        const session = userSessions.get(token);
+    if (session) {
         
         // Double check blocklist
         if (isUserBlocked(session.userId, session.username)) {
@@ -1193,11 +1203,11 @@ app.post('/api/auth/token-login', (req, res) => {
         return res.json({ success: false, message: 'Token is required.' });
     }
     const t = token.trim();
-    if (!userSessions.has(t)) {
+    const session = getActiveSession(t);
+    if (!session) {
         return res.json({ success: false, message: 'Invalid or expired token.' });
     }
-    const session = userSessions.get(t);
-    if (!session || isSessionExpired(session)) {
+    if (isSessionExpired(session)) {
         userSessions.delete(t);
         activeSessions.delete(t);
         saveSessionsToDisk();
@@ -1219,6 +1229,16 @@ app.post('/api/auth/token-login', (req, res) => {
             isAdmin: !!session.isAdmin
         }
     });
+});
+
+/* ── Internal: sync session created externally (e.g. by Discord bot) ── */
+app.post('/api/internal/session-sync', (req, res) => {
+    const session = req.body;
+    if (session && session.token) {
+        persistSession(session);
+        return res.json({ success: true });
+    }
+    return res.status(400).json({ success: false, message: 'Invalid session data' });
 });
 
 /* ── Admin: generate a manual login token for a user ─────────────── */
@@ -2167,9 +2187,38 @@ const server = app.listen(PORT, () => {
     console.log(`  Press Ctrl+C to stop.\n`);
 });
 
+/* ── Auto-start Status & Token Bot alongside server ────────────── */
+let statusBotProcess = null;
+if (process.env.AUTO_START_STATUS_BOT !== 'false') {
+    const statusBotPath = path.join(__dirname, 'status-bot.js');
+    if (fs.existsSync(statusBotPath)) {
+        const { fork } = require('child_process');
+        function launchStatusBot() {
+            try {
+                statusBotProcess = fork(statusBotPath, [], {
+                    env: { ...process.env, STATUS_BOT_SUPERVISED: '1' },
+                    stdio: 'inherit'
+                });
+                statusBotProcess.on('exit', (code) => {
+                    if (code !== 0 && code !== null) {
+                        console.warn(`  [StatusBot] Exited with code ${code}. Auto-restarting in 5s...`);
+                        setTimeout(launchStatusBot, 5000);
+                    }
+                });
+            } catch (err) {
+                console.warn('  [StatusBot] Could not launch status bot:', err.message);
+            }
+        }
+        launchStatusBot();
+    }
+}
+
 /* ── Graceful shutdown (used by stop_all.bat / process managers) ── */
 function gracefulShutdown(signal) {
     console.log(`\n  [Shutdown] Received ${signal}. Closing server gracefully...`);
+    if (statusBotProcess) {
+        try { statusBotProcess.kill('SIGTERM'); } catch (_) {}
+    }
     server.close(() => {
         console.log(`  [Shutdown] Server closed. Goodbye.\n`);
         process.exit(0);
