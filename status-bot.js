@@ -312,39 +312,34 @@ async function generateToken(robloxInput, targetDiscordId) {
     try {
         const dmChannel = await discordRequest('POST', '/users/@me/channels', { recipient_id: targetDiscordId });
         if (dmChannel && dmChannel.id) {
-            const dmContent = `Hey **${firstName}**! 👋\nYour login token for **HC Values** has been generated:`;
+            const dmContent = `Hey **${firstName}**, your login token for **HC Values** has been generated:`;
             const dmEmbed = {
-                title: '🔑 HC Values Login Token',
-                description: `Here is your manual login token for **https://hcvalue.xyz**.\nCopy the token below and use the **"Have a token? Login here."** button on the website.`,
-                color: 0x7C6CF8,
+                title: 'HC Values Login Token',
+                description: 'Here is your manual login token for **https://hcvalue.xyz**.\nCopy the token below and use the **"Have a token? Login here."** button on the website.',
+                color: 0xD97706,
                 fields: [
                     {
-                        name: '🔑 Login Token',
+                        name: 'Login Token',
                         value: `\`\`\`${userToken}\`\`\``
                     },
                     {
-                        name: '👤 Roblox Account',
-                        value: `**${robloxUser.displayName}** (@${robloxUser.name})`,
+                        name: 'Roblox Account',
+                        value: `**${robloxUser.name}**\nID: \`${robloxUser.id}\``,
                         inline: true
                     },
                     {
-                        name: '🆔 Roblox ID',
-                        value: `\`${robloxUser.id}\``,
+                        name: 'Expires',
+                        value: '30 days',
                         inline: true
                     },
                     {
-                        name: '⏳ Expires',
-                        value: `30 days (<t:${Math.floor(expiresAt / 1000)}:R>)`,
-                        inline: false
-                    },
-                    {
-                        name: '📝 How to Login',
-                        value: '1. Go to **https://hcvalue.xyz**\n2. Click **"Have a token? Login here."**\n3. Paste the token above and click **Login**!',
+                        name: 'How to Login',
+                        value: '1. Go to **https://hcvalue.xyz**\n2. Click **"Have a token? Login here."**\n3. Paste the token above and click **Login**.',
                         inline: false
                     }
                 ],
                 thumbnail: { url: avatarUrl },
-                footer: { text: 'HC Values • Keep this token private and do not share it!' }
+                footer: { text: 'HC Values | Keep this token private and do not share it.' }
             };
             await discordRequest('POST', `/channels/${dmChannel.id}/messages`, {
                 content: dmContent,
@@ -371,7 +366,7 @@ async function generateToken(robloxInput, targetDiscordId) {
     };
 }
 
-// ── Build Website-Matched Channel Embed ──────────────────────────────────────
+// ── Build Clean Channel Embed (Dark Orange, No Emojis, No Em-Dashes) ──────────
 function buildChannelEmbed(result, targetDiscordId) {
     const expDate = new Date(result.expiresAt).toLocaleString('en-US', {
         month: 'numeric',
@@ -383,40 +378,36 @@ function buildChannelEmbed(result, targetDiscordId) {
         hour12: true
     });
 
+    const robloxValue = result.robloxUser.displayName && result.robloxUser.displayName !== result.robloxUser.name
+        ? `**${result.robloxUser.displayName}** (@${result.robloxUser.name})\nID: \`${result.robloxUser.id}\``
+        : `**${result.robloxUser.name}**\nID: \`${result.robloxUser.id}\``;
+
     return {
-        title: '🔑 Generated Login Token',
-        description: '**Generated Token — Copy & send to user**',
-        color: 0x7C6CF8,
+        title: 'Generated Login Token',
+        color: 0xD97706,
         fields: [
             {
-                name: 'Generated Token',
+                name: 'Token',
                 value: `\`\`\`${result.token}\`\`\``
             },
             {
                 name: 'Roblox User',
-                value: `👤 **${result.robloxUser.displayName}** (@${result.robloxUser.name}) — Roblox ID: \`${result.robloxUser.id}\``,
-                inline: false
+                value: robloxValue,
+                inline: true
+            },
+            {
+                name: 'Discord User',
+                value: `<@${targetDiscordId}>\nID: \`${targetDiscordId}\``,
+                inline: true
             },
             {
                 name: 'Expires',
-                value: `⏳ Expires: ${expDate} (30 days)`,
+                value: `${expDate} (30 days)`,
                 inline: false
-            },
-            {
-                name: 'Linked Discord',
-                value: `<@${targetDiscordId}> (\`${targetDiscordId}\`)`,
-                inline: true
-            },
-            {
-                name: 'DM Status',
-                value: result.dmSuccess
-                    ? `✅ Sent to <@${targetDiscordId}>'s DMs!`
-                    : `⚠️ Could not DM <@${targetDiscordId}> (${result.dmError || 'DMs closed'}). Please copy the token above!`,
-                inline: true
             }
         ],
         thumbnail: result.avatarUrl ? { url: result.avatarUrl } : undefined,
-        footer: { text: 'HC Values • Token Generator' },
+        footer: { text: 'HC Values | Token Generator' },
         timestamp: new Date().toISOString()
     };
 }
@@ -552,7 +543,7 @@ async function handleMessageCreate(msg) {
     if (!isMemberAuthorized(msg.member)) {
         try {
             await discordRequest('POST', `/channels/${channelId}/messages`, {
-                content: `❌ **Permission Denied:** You must have the <@&${REQUIRED_ROLE_ID}> role to generate tokens.`,
+                content: `**Permission Denied:** You must have the <@&${REQUIRED_ROLE_ID}> role to generate tokens.`,
                 message_reference: { message_id: msg.id }
             });
         } catch (_) {}
@@ -564,7 +555,7 @@ async function handleMessageCreate(msg) {
     if (parts.length < 3) {
         try {
             await discordRequest('POST', `/channels/${channelId}/messages`, {
-                content: `❌ **Invalid Usage!**\n**Format:** \`,ctoken <roblox username or id> <discord id>\`\n**Example:** \`,ctoken Ionelyx_m 1512110331718013121\`\n*Note: Roblox can be a username or ID. Discord must be the numeric User ID.*`,
+                content: `**Invalid Usage:**\nFormat: \`,ctoken <roblox username or id> <discord id>\`\nExample: \`,ctoken Ionelyx_m 1512110331718013121\`\nNote: Roblox can be a username or ID. Discord must be the numeric User ID.`,
                 message_reference: { message_id: msg.id }
             });
         } catch (_) {}
@@ -578,7 +569,7 @@ async function handleMessageCreate(msg) {
     if (!/^\d{17,20}$/.test(cleanDiscordId)) {
         try {
             await discordRequest('POST', `/channels/${channelId}/messages`, {
-                content: `❌ **Invalid Discord ID:** "${rawDiscordId}". You must provide ONLY the numeric Discord User ID.`,
+                content: `**Invalid Discord ID:** "${rawDiscordId}". You must provide ONLY the numeric Discord User ID.`,
                 message_reference: { message_id: msg.id }
             });
         } catch (_) {}
@@ -591,7 +582,7 @@ async function handleMessageCreate(msg) {
     if (!result.success) {
         try {
             await discordRequest('POST', `/channels/${channelId}/messages`, {
-                content: `❌ **Token Generation Failed:** ${result.message}`,
+                content: `**Token Generation Failed:** ${result.message}`,
                 message_reference: { message_id: msg.id }
             });
         } catch (_) {}
