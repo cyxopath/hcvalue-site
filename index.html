@@ -141,17 +141,12 @@
                     <!-- Admin Section -->
                     <section id="admin-section" style="display:none;">
                         <div class="admin-header-banner">
-                            <div class="admin-badge-pill">
-                                <span class="admin-badge-dot"></span>
-                                <span>Restricted Admin Console</span>
-                            </div>
                             <h2 class="admin-main-title">Admin Dashboard</h2>
                             <p class="admin-main-sub">Real-time statistics, skin pricing, security controls &amp; system settings</p>
                         </div>
                         <div class="admin-stats-row-3">
                             <div class="stat-card">
                                 <div class="stat-card-top">
-                                    <span class="stat-card-icon">🌐</span>
                                     <span class="stat-pill">ALL TIME</span>
                                 </div>
                                 <div id="total-clicks">0</div>
@@ -159,7 +154,6 @@
                             </div>
                             <div class="stat-card">
                                 <div class="stat-card-top">
-                                    <span class="stat-card-icon">⚡</span>
                                     <span class="stat-pill active-pill">● TODAY</span>
                                 </div>
                                 <div id="stat-today">0</div>
@@ -167,7 +161,6 @@
                             </div>
                             <div class="stat-card">
                                 <div class="stat-card-top">
-                                    <span class="stat-card-icon">📅</span>
                                     <span class="stat-pill">7-DAY</span>
                                 </div>
                                 <div id="stat-week">0</div>
@@ -177,7 +170,6 @@
                         <div class="stat-card stat-card-chart">
                             <div class="chart-header">
                                 <div style="display:flex; align-items:center; gap:0.6rem;">
-                                    <span class="stat-card-icon" style="font-size:1.1rem;">📈</span>
                                     <h3 style="font-size:0.92rem; font-weight:700; color:#fff; text-transform:none; letter-spacing:0;">Daily Traffic <span style="font-size:0.75rem; color:var(--text-3); font-weight:500;">(Last 14 Days)</span></h3>
                                 </div>
                                 <div class="chart-legend">
@@ -188,12 +180,12 @@
                             <div id="traffic-chart" class="chart-container"></div>
                             <div id="chart-tooltip" class="chart-tooltip"></div>
                         </div>
-                        <div class="admin-controls">
-                            <!-- Left: Edit Panel -->
+
+                        <div class="admin-controls-grid">
+                            <!-- Pair 1 Left: Edit Skin Prices -->
                             <div class="admin-panel-card">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">🎨</span>
                                         <h3>Edit Skin Prices</h3>
                                     </div>
                                     <select id="admin-edit-cat-select" class="admin-select-sm"></select>
@@ -203,11 +195,11 @@
                                 </div>
                                 <div id="admin-edit-grid" class="admin-grid"></div>
                             </div>
-                            <!-- Right: Add Panel -->
+
+                            <!-- Pair 1 Right: Add New Skin -->
                             <div class="admin-panel-card">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">➕</span>
                                         <h3>Add New Skin</h3>
                                     </div>
                                 </div>
@@ -223,13 +215,25 @@
                                     <button id="btn-add-skin" class="preview-btn" style="width:100%; margin-top:1.25rem; height:48px; font-weight:700;">Create New Skin</button>
                                 </div>
                             </div>
-                        </div>
-                        <div class="admin-controls">
-                            <!-- Blocklist Panel -->
-                            <div class="admin-panel-card" style="width: 100%;">
+
+                            <!-- Pair 2 Left: Connected Users -->
+                            <div class="admin-panel-card">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">🛡️</span>
+                                        <div>
+                                            <h3>Connected Users</h3>
+                                            <div class="admin-card-desc">List of all currently connected Discord users.</div>
+                                        </div>
+                                    </div>
+                                    <button id="admin-btn-logout-all" class="preview-btn" style="padding: 0.65rem 1.35rem; font-weight: 700;">Log Everyone Out</button>
+                                </div>
+                                <div id="admin-sessions-grid" class="admin-grid" style="margin-top: 1rem; max-height: 320px; overflow-y: auto;"></div>
+                            </div>
+
+                            <!-- Pair 2 Right: Manage Blocklist -->
+                            <div class="admin-panel-card">
+                                <div class="admin-card-header">
+                                    <div class="admin-card-title-group">
                                         <div>
                                             <h3>Manage Blocklist</h3>
                                             <div class="admin-card-desc">Blocked users will not be able to log in or access site content.</div>
@@ -242,29 +246,11 @@
                                 </div>
                                 <div id="admin-blocklist-grid" class="admin-grid" style="margin-top: 1.25rem; max-height: 300px; overflow-y: auto;"></div>
                             </div>
-                        </div>
-                        <div class="admin-controls">
-                            <!-- Active Sessions Panel -->
-                            <div class="admin-panel-card" style="width: 100%;">
+
+                            <!-- Pair 3 Left: Generate Login Token -->
+                            <div class="admin-panel-card">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">👥</span>
-                                        <div>
-                                            <h3>Connected Users</h3>
-                                            <div class="admin-card-desc">List of all currently connected Discord users.</div>
-                                        </div>
-                                    </div>
-                                    <button id="admin-btn-logout-all" class="preview-btn" style="padding: 0.65rem 1.35rem; font-weight: 700;">Log Everyone Out</button>
-                                </div>
-                                <div id="admin-sessions-grid" class="admin-grid" style="margin-top: 1rem; max-height: 320px; overflow-y: auto;"></div>
-                            </div>
-                        </div>
-                        <!-- Generate Manual Token Panel -->
-                        <div class="admin-controls">
-                            <div class="admin-panel-card" style="width: 100%;">
-                                <div class="admin-card-header">
-                                    <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">🔑</span>
                                         <div>
                                             <h3>Generate Login Token</h3>
                                             <div class="admin-card-desc">Generate a manual login token for a user with their Discord User ID. Send the token to the user for instant access.</div>
@@ -286,7 +272,7 @@
                                 </div>
                                 <!-- Result display -->
                                 <div id="gentoken-result" style="display: none; margin-top: 1.25rem;">
-                                    <div style="font-size: 0.75rem; color: #a259ff; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 0.5rem;">✨ Generated Token — Copy &amp; send to user</div>
+                                    <div style="font-size: 0.75rem; color: #a259ff; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 0.5rem;">Generated Token — Copy &amp; send to user</div>
                                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                                         <code id="gentoken-value" style="flex: 1;"></code>
                                         <button id="gentoken-copy-btn" class="preview-btn" style="padding: 0.55rem 1.1rem; font-size: 0.82rem; flex-shrink: 0;">Copy</button>
@@ -296,47 +282,11 @@
                                 </div>
                                 <div id="gentoken-error" style="display: none; margin-top: 1rem; color: #f87171; font-size: 0.85rem; font-weight: 600;"></div>
                             </div>
-                        </div>
-                        <div class="admin-controls">
-                            <div class="admin-panel-card" style="width: 100%;">
+
+                            <!-- Pair 3 Right: Manage Prices Access -->
+                            <div class="admin-panel-card">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">🗳️</span>
-                                        <div>
-                                            <h3>Lookup Skin Votes by Category</h3>
-                                            <div class="admin-card-desc">Select a category to view all its skins, sorted by price (high to low) with full vote breakdowns.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:0.8rem; align-items:center; margin-top:0.5rem;">
-                                    <select id="admin-skin-select" style="flex:1; min-width:220px; box-sizing: border-box;"></select>
-                                    <button id="admin-skin-refresh-btn" class="preview-btn" style="padding:0.75rem 1.4rem; height:46px;">↻ Refresh</button>
-                                </div>
-                                <div id="admin-skin-vote-results" style="margin-top:1.25rem; min-height:80px; display:flex; flex-direction:column; gap:0.75rem;"></div>
-                            </div>
-                        </div>
-                        <div class="admin-controls">
-                            <!-- Voted Skins Categorized & Price Sorted Panel -->
-                            <div class="admin-panel-card" style="width: 100%;">
-                                <div class="admin-card-header">
-                                    <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">📊</span>
-                                        <div>
-                                            <h3>Voted Skins Categorized (Price: High to Low)</h3>
-                                            <div class="admin-card-desc">View all skins that have received community votes, grouped by category and sorted from highest to lowest price.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button id="admin-btn-load-all-skins" class="preview-btn" style="width:100%; margin-top:0.5rem; height:48px;">Load Voted Skins</button>
-                                <div id="admin-all-skins-results" style="margin-top:1.25rem; min-height:110px; display:flex; flex-direction:column; gap:1.25rem; max-height:600px; overflow-y:auto;"></div>
-                            </div>
-                        </div>
-                        <div class="admin-controls">
-                            <!-- Prices Whitelist Panel -->
-                            <div class="admin-panel-card" style="width: 100%;">
-                                <div class="admin-card-header">
-                                    <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">⭐</span>
                                         <div>
                                             <h3>Manage Prices Access</h3>
                                             <div class="admin-card-desc">Discord accounts added to this list will see the Prices tab and can suggest new values.</div>
@@ -349,13 +299,42 @@
                                 </div>
                                 <div id="admin-prices-whitelist-grid" class="admin-grid" style="margin-top: 1.25rem; max-height: 300px; overflow-y: auto;"></div>
                             </div>
-                        </div>
-                        <!-- Trending Items Manager -->
-                        <div class="admin-controls">
-                            <div class="admin-panel-card" style="width: 100%;">
+
+                            <!-- Pair 4 Left: Lookup Skin Votes by Category -->
+                            <div class="admin-panel-card">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">🔥</span>
+                                        <div>
+                                            <h3>Lookup Skin Votes by Category</h3>
+                                            <div class="admin-card-desc">Select a category to view all its skins, sorted by price (high to low) with full vote breakdowns.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.8rem; align-items:center; margin-top:0.5rem;">
+                                    <select id="admin-skin-select" style="flex:1; min-width:220px; box-sizing: border-box;"></select>
+                                    <button id="admin-skin-refresh-btn" class="preview-btn" style="padding:0.75rem 1.4rem; height:46px;">Refresh</button>
+                                </div>
+                                <div id="admin-skin-vote-results" style="margin-top:1.25rem; min-height:80px; display:flex; flex-direction:column; gap:0.75rem;"></div>
+                            </div>
+
+                            <!-- Pair 4 Right: Voted Skins Categorized -->
+                            <div class="admin-panel-card">
+                                <div class="admin-card-header">
+                                    <div class="admin-card-title-group">
+                                        <div>
+                                            <h3>Voted Skins Categorized (Price: High to Low)</h3>
+                                            <div class="admin-card-desc">View all skins that have received community votes, grouped by category and sorted from highest to lowest price.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="admin-btn-load-all-skins" class="preview-btn" style="width:100%; margin-top:0.5rem; height:48px;">Load Voted Skins</button>
+                                <div id="admin-all-skins-results" style="margin-top:1.25rem; min-height:110px; display:flex; flex-direction:column; gap:1.25rem; max-height:600px; overflow-y:auto;"></div>
+                            </div>
+
+                            <!-- Pair 5 Left: Manage Most Trending -->
+                            <div class="admin-panel-card">
+                                <div class="admin-card-header">
+                                    <div class="admin-card-title-group">
                                         <div>
                                             <h3>Manage Most Trending</h3>
                                             <div class="admin-card-desc">These items appear in the Most Trending section at the top of the values page.</div>
@@ -379,14 +358,11 @@
                                 </div>
                                 <div id="admin-trending-list" style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
                             </div>
-                        </div>
-                        
-                        <div class="admin-controls">
-                            <!-- Site Settings Panel -->
-                            <div class="admin-panel-card" style="width: 100%;">
+
+                            <!-- Pair 5 Right: Site Settings -->
+                            <div class="admin-panel-card">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">⚙️</span>
                                         <div>
                                             <h3>Site Settings</h3>
                                             <div class="admin-card-desc">Configure global links and options for the website.</div>
@@ -401,14 +377,11 @@
                                     <button id="admin-btn-save-settings" class="preview-btn" style="width:100%; margin-top: 1.25rem; height: 48px; font-weight: 700;">Save Settings</button>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="admin-controls">
-                            <!-- Discord Verification Settings Panel -->
-                            <div class="admin-panel-card" style="width: 100%;">
+                            <!-- Pair 6: Discord Verification Settings (Spanning across full grid width) -->
+                            <div class="admin-panel-card full-width" style="grid-column: span 2;">
                                 <div class="admin-card-header">
                                     <div class="admin-card-title-group">
-                                        <span class="admin-card-icon">💬</span>
                                         <div>
                                             <h3>Discord Verification Settings</h3>
                                             <div class="admin-card-desc">Configure required Discord server membership and verification options.</div>

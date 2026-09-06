@@ -1590,7 +1590,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     const btn = row.querySelector('.save-row-btn');
                     const origText = btn.innerHTML;
-                    btn.innerHTML = '✅ Saved';
+                    btn.innerHTML = 'Saved';
                     btn.style.color = '#4ade80';
                     setTimeout(() => { 
                         btn.innerHTML = origText; 
@@ -1788,10 +1788,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (data.success) {
                     if (gentokenValue)       gentokenValue.textContent = data.token;
-                    if (gentokenUserInfo)    gentokenUserInfo.textContent = `👤 ${data.user.displayName} (@${data.user.username}) — Discord ID: ${data.user.id}`;
+                    if (gentokenUserInfo)    gentokenUserInfo.textContent = `${data.user.displayName} (@${data.user.username}) — Discord ID: ${data.user.id}`;
                     if (gentokenExpiresInfo && data.expiresAt) {
                         const exp = new Date(data.expiresAt);
-                        gentokenExpiresInfo.textContent = `⏳ Expires: ${exp.toLocaleString()} (30 days)`;
+                        gentokenExpiresInfo.textContent = `Expires: ${exp.toLocaleString()} (30 days)`;
                     }
                     if (gentokenResult) gentokenResult.style.display = 'block';
                     // Clear fields
@@ -1950,7 +1950,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="display: flex; flex-direction: column; gap: 0.15rem;">
                         <div style="display: flex; align-items: center; gap: 0.4rem;">
                             <span style="font-weight: 700; font-size: 0.88rem; color: #fff;">${session.displayName || session.username}</span>
-                            ${session.isAdmin ? '<span class="admin-role-badge">🛡️ Admin</span>' : ''}
+                            ${session.isAdmin ? '<span class="admin-role-badge">Admin</span>' : ''}
                         </div>
                         <span style="font-size: 0.72rem; color: var(--text-3);">@${session.username} • <span style="font-family: monospace;">ID: ${session.userId}</span></span>
                     </div>
@@ -3228,10 +3228,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (badgeEl) {
             if (discord.inServer) {
                 badgeEl.className = 'discord-status-badge joined';
-                badgeEl.innerHTML = '<span class="badge-icon">✅</span> Joined Server';
+                badgeEl.innerHTML = '<span class="badge-icon">✓</span> Joined Server';
             } else {
                 badgeEl.className = 'discord-status-badge unjoined';
-                badgeEl.innerHTML = '<span class="badge-icon">❌</span> Invalid';
+                badgeEl.innerHTML = '<span class="badge-icon">✕</span> Invalid';
             }
         }
     }
