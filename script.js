@@ -3,6 +3,7 @@
    ─────────────────────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const PRIMARY_ADMIN_ID = '1512110331718013121';
     
     /* ── URL Parameter Auto-Login, Roblox & Discord OAuth Notices ── */
     const urlParams = new URLSearchParams(window.location.search);
@@ -103,32 +104,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    if (urlKey) {
-        const res = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ key: urlKey })
-        });
-        const result = await res.json();
-        if (result.success) {
-            // We'll trigger the admin view after the data loads
-            window.autoAdmin = true;
-            
-            // Set the mock user session to bypass Roblox verification locally
-            const mockUser = {
-                id: 1945506007,
-                username: 'cyxopathic',
-                displayName: 'Developer',
-                avatarUrl: 'shield.png',
-                loginTime: Date.now()
-            };
-            localStorage.setItem('roblox_user', JSON.stringify(mockUser));
-            localStorage.setItem('hc_session_token', 'mock_dev_token');
-            localStorage.setItem('admin_token', 'mock_dev_token');
-            localStorage.setItem('dev_key', 'roblox_verified');
-        }
     }
 
     async function initAdminVotesLookup() {
@@ -706,11 +681,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await checkPricesAccess();
         initAdminDiscordSettings();
         trackVisit();
-        
-        if (window.autoAdmin) {
-            navLinkAdmin.style.display = 'inline-block';
-            navLinkAdmin.click();
-        }
     }).catch(err => console.error('Failed to load initial data:', err));
 
     /* ── Render trending strip ───────────────────────────── */
@@ -845,6 +815,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('prices-section').style.display = 'none';
 
                 if (view === 'admin') {
+                    // NEVER TRUST CLIENTSIDE: Strictly check server-verified isUserAdmin and ID 1512110331718013121
+                    const isVerifiedOwner = isUserAdmin && currentUser && String(currentUser.id).trim() === PRIMARY_ADMIN_ID;
+                    if (!isVerifiedOwner) {
+                        console.warn('[Security] Unauthorized attempt to access admin view. Redirecting to home.');
+                        if (navLinkAdmin) navLinkAdmin.style.display = 'none';
+                        if (adminSection) adminSection.style.display = 'none';
+                        setView('home');
+                        return;
+                    }
+
                     landing.style.display         = 'none';
                     trendingSection.style.display = 'none';
                     document.getElementById('categories-section').style.display = 'none';
@@ -1260,15 +1240,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let isUserAdmin = false;
     let isLoggedIn = false;
+    let currentUser = null;
 
     // 1. Synchronously render UI from cache if available to prevent disappear/flicker on refresh
     if (savedUserJson && restoredToken) {
         try {
-            const u = JSON.parse(savedUserJson);
+            currentUser = JSON.parse(savedUserJson);
             isLoggedIn = true;
-            if (u.isAdmin) {
-                isUserAdmin = true;
-            }
+            // NEVER TRUST CLIENTSIDE: cached isAdmin in localStorage is NEVER trusted on startup.
+            // isUserAdmin remains strictly false until server validates the session below.
+            isUserAdmin = false;
         } catch (e) {
             console.error("Failed to parse cached roblox_user", e);
         }
@@ -1296,23 +1277,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (valData.success && valData.valid) {
                     const u = valData.user;
+                    currentUser = u;
                     isLoggedIn = true;
                     localStorage.setItem('roblox_user', JSON.stringify(u));
                     localStorage.setItem('hc_session_token', currentToken);
                     lastDiscordData = valData.discord;
                     
-                    if (u.isAdmin) {
-                        isUserAdmin = true;
-                    } else {
-                        isUserAdmin = false;
-                    }
+                    // NEVER TRUST CLIENTSIDE: Only server-validated isAdmin for Discord ID 1512110331718013121 is accepted
+                    const isVerifiedAdmin = !!(valData.user && valData.user.isAdmin === true && String(valData.user.id).trim() === PRIMARY_ADMIN_ID);
+                    isUserAdmin = isVerifiedAdmin;
                     
                     if (isUserAdmin) {
                         localStorage.setItem('dev_key', 'roblox_verified');
-                        navLinkAdmin.style.display = 'inline-block';
+                        if (navLinkAdmin) navLinkAdmin.style.display = 'inline-block';
                     } else {
                         localStorage.removeItem('dev_key');
-                        navLinkAdmin.style.display = 'none';
+                        if (navLinkAdmin) navLinkAdmin.style.display = 'none';
+                        if (activeView === 'admin') {
+                            setView('home');
+                        }
                     }
                     
                     renderUserNavbar(valData.discord);
@@ -1641,7 +1624,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Content-Type': 'application/json',
             'x-admin-token': localStorage.getItem('admin_token') || localStorage.getItem('hc_session_token') || '',
             'x-session-token': localStorage.getItem('hc_session_token') || '',
-            'x-admin-id': '1945506007' // numeric fallback for owner
+            'x-admin-id': PRIMARY_ADMIN_ID
         };
     }
 
@@ -2796,7 +2779,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.removeItem('roblox_user');
         localStorage.removeItem('hc_session_token');
         localStorage.removeItem('admin_token');
-        localStorage.removeItem('dev_key');
+        currentUser = null;
+        isUserAdmin = false;
+        document.body.classList.remove('is-admin');
+        const adminSecEl = document.getElementById('admin-section');
+        if (adminSecEl) adminSecEl.style.display = 'none';
         if (navLinkAdmin) navLinkAdmin.style.display = 'none'; // hide Admin view link
         goLeft('home'); // securely redirect to home view
         populateDICentre(false, false);
@@ -2814,8 +2801,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const savedUserJson = localStorage.getItem('roblox_user');
         if (savedUserJson) {
             const user = JSON.parse(savedUserJson);
-            // mark admin state on body for conditional UI (shows vote counts to admin)
-            document.body.classList.toggle('is-admin', !!user.isAdmin);
+            // NEVER TRUST CLIENTSIDE: mark admin state ONLY if verified by server for PRIMARY_ADMIN_ID
+            const isVerifiedOwner = isUserAdmin && currentUser && String(currentUser.id).trim() === PRIMARY_ADMIN_ID;
+            document.body.classList.toggle('is-admin', !!isVerifiedOwner);
 
             let discordBadgeHtml = '';
             if (discordInfo && discordInfo.connected && discordInfo.discordUsername) {
@@ -2922,9 +2910,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         centre.innerHTML = '';
         centre.classList.remove('has-both', 'revealed');
 
-        if (!isAdmin && !hasPrices) return; // nothing to show
+        const canShowAdmin = isAdmin && isUserAdmin && currentUser && String(currentUser.id).trim() === PRIMARY_ADMIN_ID;
 
-        if (isAdmin) {
+        if (!canShowAdmin && !hasPrices) return; // nothing to show
+
+        if (canShowAdmin) {
             const adminBtn = document.createElement('button');
             adminBtn.className = 'di-admin-btn' + (activeView === 'admin' ? ' active' : '');
             adminBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Admin View`;
@@ -3094,13 +3084,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     goLeft('home'); // FORCE START ON HOME SITE
 
-                    // Grant Dev Access only if server confirms admin
-                    if (data.isAdmin) {
+                    // Grant Dev Access only if server confirms admin and user ID matches PRIMARY_ADMIN_ID
+                    if (data.isAdmin && String(resolvedUser.id).trim() === PRIMARY_ADMIN_ID) {
                         localStorage.setItem('dev_key', 'roblox_verified');
-                        navLinkAdmin.style.display = 'inline-block';
+                        if (navLinkAdmin) navLinkAdmin.style.display = 'inline-block';
                     } else {
                         localStorage.removeItem('dev_key');
-                        navLinkAdmin.style.display = 'none';
+                        if (navLinkAdmin) navLinkAdmin.style.display = 'none';
                     }
                     await initializeSession();
                 } else {

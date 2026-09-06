@@ -13,17 +13,17 @@ const crypto  = require('crypto');
 
 const app  = express();
 const PORT = process.env.PORT || 8000;
-const ADMIN_USER_ID = 1945506007; // Legacy fallback
-const ADMIN_DISCORD_ID = process.env.ADMIN_DISCORD_ID || '1512110331718013121';
-const ADMIN_DISCORD_IDS = [
-    (process.env.ADMIN_DISCORD_ID || '').trim(),
-    '1512110331718013121', // Primary Discord Admin ID
-    '1945506007'           // Fallback
-].filter(Boolean);
+const PRIMARY_ADMIN_DISCORD_ID = '1512110331718013121';
+const ADMIN_DISCORD_ID = (process.env.ADMIN_DISCORD_ID || PRIMARY_ADMIN_DISCORD_ID).trim();
+const ALLOWED_ADMIN_IDS = new Set([PRIMARY_ADMIN_DISCORD_ID]);
+if (process.env.ADMIN_DISCORD_ID && process.env.ADMIN_DISCORD_ID.trim()) {
+    ALLOWED_ADMIN_IDS.add(process.env.ADMIN_DISCORD_ID.trim());
+}
 
 function isUserAdmin(userId) {
     if (!userId) return false;
-    return ADMIN_DISCORD_IDS.includes(String(userId));
+    const cleanId = String(userId).trim();
+    return ALLOWED_ADMIN_IDS.has(cleanId);
 }
 
 const DATA_ACCESS_COOKIE = 'hc_data_session';
@@ -182,8 +182,13 @@ function persistSession(session) {
         }
     }
 
+    session.isAdmin = isUserAdmin(session.userId || session.discordId);
     userSessions.set(session.token, session);
-    if (session.isAdmin) activeSessions.add(session.token);
+    if (session.isAdmin) {
+        activeSessions.add(session.token);
+    } else {
+        activeSessions.delete(session.token);
+    }
     saveSessionsToDisk();
 }
 
@@ -480,9 +485,12 @@ function loadPersistedSessions() {
                 
                 userSessions.set(s.token, s);
                 if (uId) userToLatestToken.set(uId, s.token);
-                if (s.isAdmin || isUserAdmin(s.userId)) {
-                    s.isAdmin = true;
+                // Recalculate isAdmin strictly via isUserAdmin - NEVER trust persisted state
+                s.isAdmin = isUserAdmin(s.userId || s.discordId);
+                if (s.isAdmin) {
                     activeSessions.add(s.token);
+                } else {
+                    activeSessions.delete(s.token);
                 }
             }
         }
@@ -500,6 +508,9 @@ function getActiveSession(token) {
         loadPersistedSessions();
         s = userSessions.get(token);
     }
+    if (s) {
+        s.isAdmin = isUserAdmin(s.userId || s.discordId);
+    }
     return s || null;
 }
 
@@ -507,7 +518,8 @@ function getActiveSession(token) {
 function requireAdmin(req, res, next) {
     const token = getRequestSessionToken(req);
     const session = getActiveSession(token);
-    if (session && session.isAdmin && isUserAdmin(session.userId)) {
+    if (session && isUserAdmin(session.userId || session.discordId)) {
+        session.isAdmin = true;
         req.userSession = session;
         return next();
     }
@@ -577,27 +589,9 @@ app.post('/api/save', requireAdmin, (req, res) => {
     res.json({ success: true });
 });
 
-/* ── Legacy key-based login ──────────────────────────────────────── */
+/* ── Legacy key-based login (Disabled: Discord auth required) ─────── */
 app.post('/api/login', (req, res) => {
-    const body = req.body || {};
-    const key = body.key || body.token || '';
-    const success = key === 'hcdev2026';
-    if (success) {
-        const mockToken = 'mock_dev_token';
-        const session = {
-            token: mockToken,
-            userId: ADMIN_DISCORD_ID,
-            username: 'cyxopathic',
-            displayName: 'Developer',
-            avatarUrl: 'shield.png',
-            loginTime: Date.now(),
-            expiresAt: Date.now() + SESSION_TTL_MS,
-            isAdmin: true
-        };
-        persistSession(session);
-        setSessionCookie(req, res, mockToken);
-    }
-    res.json({ success });
+    return res.status(403).json({ success: false, message: 'Legacy key login disabled. Discord login required.' });
 });
 
 /* ── Blocklist helper check ──────────────────────────────────────── */
@@ -907,6 +901,9 @@ app.post('/api/validate-session', async (req, res) => {
         discordStatus.inServer = true;
     }
 
+    const isAdmin = isUserAdmin(session.userId || session.discordId);
+    session.isAdmin = isAdmin;
+
     res.json({
         success: true,
         valid: true,
@@ -916,7 +913,7 @@ app.post('/api/validate-session', async (req, res) => {
             displayName: session.displayName,
             avatarUrl: session.avatarUrl,
             loginTime: session.loginTime,
-            isAdmin: !!session.isAdmin
+            isAdmin: isAdmin
         },
         discord: discordStatus
     });
@@ -961,6 +958,9 @@ app.post('/api/auth/token-login', (req, res) => {
         }
     }
 
+    const tokenAdmin = isUserAdmin(session.userId || session.discordId);
+    session.isAdmin = tokenAdmin;
+
     setSessionCookie(req, res, t);
     return res.json({
         success: true,
@@ -971,7 +971,7 @@ app.post('/api/auth/token-login', (req, res) => {
             displayName: session.displayName,
             avatarUrl: session.avatarUrl,
             loginTime: session.loginTime,
-            isAdmin: !!session.isAdmin
+            isAdmin: tokenAdmin
         }
     });
 });
@@ -1999,7 +1999,7 @@ const server = app.listen(PORT, () => {
     }
 
     console.log(`\n  ✦ HC Values is running → http://localhost:${PORT}\n`);
-    console.log(`  Admin ID: ${ADMIN_USER_ID}`);
+    console.log(`  Admin Discord ID: ${PRIMARY_ADMIN_DISCORD_ID}`);
     console.log(`  Session token: ${SESSION_COOKIE_NAME}`);
     console.log(`  Session expiry: ${SESSION_TTL_DAYS} days`);
     console.log(`  Persisted sessions file: ${SESSIONS_FILE}`);
