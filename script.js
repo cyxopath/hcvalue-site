@@ -1865,24 +1865,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const avatarUrl = (isObj && item.avatarUrl) ? item.avatarUrl : 'https://www.roblox.com/headshot-thumbnail/image?userId=1&width=150&height=150&format=png';
 
             const card = document.createElement('div');
-            card.style.display = 'flex';
-            card.style.alignItems = 'center';
-            card.style.justifyContent = 'space-between';
-            card.style.padding = '0.75rem 1rem';
-            card.style.background = 'rgba(255, 255, 255, 0.02)';
-            card.style.borderRadius = '8px';
-            card.style.marginBottom = '0.5rem';
-            card.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+            card.className = 'admin-user-card';
 
             card.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <img src="${avatarUrl}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: #111; object-fit: cover;">
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-1);">${displayName}</span>
-                        <span style="font-size: 0.7rem; color: var(--text-3);">@${username} (ID: ${targetId})</span>
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <img src="${avatarUrl}" alt="Avatar" class="admin-user-avatar">
+                    <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                        <span style="font-weight: 700; font-size: 0.88rem; color: #fff;">${displayName}</span>
+                        <span style="font-size: 0.72rem; color: var(--text-3);">@${username} • <span style="font-family: monospace;">ID: ${targetId}</span></span>
                     </div>
                 </div>
-                <button class="preview-btn" style="background: var(--danger); font-size: 0.7rem; padding: 0.35rem 0.85rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+                <button class="admin-danger-action-btn">
                     Unblock
                 </button>
             `;
@@ -1947,27 +1940,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         uniqueSessions.forEach(session => {
             const card = document.createElement('div');
-            card.style.display = 'flex';
-            card.style.alignItems = 'center';
-            card.style.justifyContent = 'space-between';
-            card.style.padding = '0.75rem 1rem';
-            card.style.background = 'rgba(255, 255, 255, 0.02)';
-            card.style.borderRadius = '8px';
-            card.style.marginBottom = '0.5rem';
-            card.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+            card.className = 'admin-user-card';
 
             const joinedTime = new Date(session.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
             card.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <img src="${session.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: #111; object-fit: cover;">
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-1);">${session.displayName || session.username}</span>
-                        <span style="font-size: 0.7rem; color: var(--text-3);">@${session.username} (ID: ${session.userId})${session.isAdmin ? ' <span style="color: var(--accent); font-weight: bold;">[Admin]</span>' : ''}</span>
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <img src="${session.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar" class="admin-user-avatar">
+                    <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <span style="font-weight: 700; font-size: 0.88rem; color: #fff;">${session.displayName || session.username}</span>
+                            ${session.isAdmin ? '<span class="admin-role-badge">🛡️ Admin</span>' : ''}
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-3);">@${session.username} • <span style="font-family: monospace;">ID: ${session.userId}</span></span>
                     </div>
                 </div>
-                <div style="text-align: right; display: flex; flex-direction: column; gap: 0.2rem;">
-                    <span style="font-size: 0.7rem; color: var(--text-3);">Joined: ${joinedTime}</span>
+                <div style="text-align: right; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="admin-time-badge">Joined ${joinedTime}</span>
                 </div>
             `;
             sessionsGrid.appendChild(card);
@@ -2141,9 +2130,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         allNavLinks.forEach(l => l.classList.remove('active'));
         const map = { home: navLinkHome, values: navLinkValues, exclusive: navLinkExclusive, prices: navLinkPrices, admin: navLinkAdmin };
         const el = map[view];
-        if (!el) return;
-        el.classList.add('active');
-        moveUnderline(el);
+        if (el) {
+            el.classList.add('active');
+            moveUnderline(el);
+        }
+        const adminBtn = document.querySelector('.di-admin-btn');
+        const priceBtn = document.querySelector('.di-price-btn');
+        if (adminBtn) adminBtn.classList.toggle('active', view === 'admin');
+        if (priceBtn) priceBtn.classList.toggle('active', view === 'prices');
     }
     function moveUnderline(el) {
         if (!navUnderline || !el) return;
@@ -2930,41 +2924,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!isAdmin && !hasPrices) return; // nothing to show
 
-        if (isAdmin && hasPrices) {
-            // Both: show Admin by default, reveal Price on hover/tap
-            centre.classList.add('has-both');
-
+        if (isAdmin) {
             const adminBtn = document.createElement('button');
-            adminBtn.className = 'di-admin-btn';
-            adminBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Admin View`;
-            adminBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                resetValuesToTrending();
-                setView('admin');
-            });
-            // Mobile tap: toggle price reveal
-            adminBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                centre.classList.toggle('revealed');
-            }, { passive: false });
-
-            const priceBtn = document.createElement('button');
-            priceBtn.className = 'di-price-btn';
-            priceBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Prices`;
-            priceBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                centre.classList.remove('revealed');
-                resetValuesToTrending();
-                setView('prices');
-            });
-
-            centre.appendChild(adminBtn);
-            centre.appendChild(priceBtn);
-
-        } else if (isAdmin) {
-            // Admin only
-            const adminBtn = document.createElement('button');
-            adminBtn.className = 'di-admin-btn';
+            adminBtn.className = 'di-admin-btn' + (activeView === 'admin' ? ' active' : '');
             adminBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Admin View`;
             adminBtn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -2972,11 +2934,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setView('admin');
             });
             centre.appendChild(adminBtn);
+        }
 
-        } else if (hasPrices) {
-            // Prices only
+        if (hasPrices) {
             const priceBtn = document.createElement('button');
-            priceBtn.className = 'di-price-btn';
+            priceBtn.className = 'di-price-btn' + (activeView === 'prices' ? ' active' : '');
             priceBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Prices`;
             priceBtn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -3454,9 +3416,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if (data.success && data.allowed) {
                 if (navLinkPrices) navLinkPrices.style.display = 'inline-block';
+                populateDICentre(isUserAdmin, true);
                 return data;
             } else {
                 if (navLinkPrices) navLinkPrices.style.display = 'none';
+                populateDICentre(isUserAdmin, false);
                 // If they are on the prices view but lost access, kick them out instantly
                 if (activeView === 'prices') {
                     alert('Your access to Prices has been revoked.');
@@ -3467,6 +3431,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
             console.error('Failed to check prices access:', e);
             if (navLinkPrices) navLinkPrices.style.display = 'none';
+            populateDICentre(isUserAdmin, false);
             return { allowed: false, isAdmin: false };
         }
     }
@@ -3686,24 +3651,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         list.forEach(item => {
             const card = document.createElement('div');
-            card.style.display = 'flex';
-            card.style.alignItems = 'center';
-            card.style.justifyContent = 'space-between';
-            card.style.padding = '0.75rem 1rem';
-            card.style.background = 'rgba(255, 255, 255, 0.02)';
-            card.style.borderRadius = '8px';
-            card.style.marginBottom = '0.5rem';
-            card.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+            card.className = 'admin-user-card';
 
             card.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <img src="${item.avatarUrl || 'assets/placeholder-roblox.png'}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: #111; object-fit: cover;">
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-1);">${item.displayName || item.username}</span>
-                        <span style="font-size: 0.7rem; color: var(--text-3);">@${item.username} (ID: ${item.userId})</span>
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <img src="${item.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar" class="admin-user-avatar">
+                    <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                        <span style="font-weight: 700; font-size: 0.88rem; color: #fff;">${item.displayName || item.username}</span>
+                        <span style="font-size: 0.72rem; color: var(--text-3);">@${item.username} • <span style="font-family: monospace;">ID: ${item.userId}</span></span>
                     </div>
                 </div>
-                <button class="preview-btn" style="background: var(--danger); font-size: 0.7rem; padding: 0.35rem 0.85rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+                <button class="admin-danger-action-btn">
                     Remove
                 </button>
             `;
