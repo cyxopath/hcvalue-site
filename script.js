@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const robloxUserParam = urlParams.get('roblox_user');
     const discordError = urlParams.get('discord_error');
     const discordSuccess = urlParams.get('discord_success');
+    const discordToken = urlParams.get('discord_token');
+    const discordUserParam = urlParams.get('discord_user');
 
     function renderAuthCallbackNotice(title, subtitle, isSuccess) {
         document.body.innerHTML = `
@@ -36,11 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 window.opener.postMessage({ type: 'ROBLOX_AUTH_ERROR', error: robloxError }, '*');
             } catch (_) {}
-            renderAuthCallbackNotice('Roblox Connection Notice', robloxError.replace(/_/g, ' '), false);
+            renderAuthCallbackNotice('Login Notice', robloxError.replace(/_/g, ' '), false);
             return;
         }
         window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => alert(`Roblox Login Notice: ${robloxError.replace(/_/g, ' ')}`), 300);
+        setTimeout(() => alert(`Login Notice: ${robloxError.replace(/_/g, ' ')}`), 300);
     }
     if (robloxSuccess && robloxToken) {
         localStorage.setItem('hc_session_token', robloxToken);
@@ -59,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     user: robloxUserParam
                 }, '*');
             } catch (_) {}
-            renderAuthCallbackNotice('Connected to Roblox!', 'Successfully authenticated. Closing tab...', true);
+            renderAuthCallbackNotice('Connected!', 'Successfully authenticated. Closing tab...', true);
             setTimeout(() => { window.close(); }, 700);
             return;
         }
@@ -77,13 +79,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => alert(`Discord Connection Notice: ${discordError.replace(/_/g, ' ')}`), 300);
     }
     if (discordSuccess) {
+        if (discordToken) {
+            localStorage.setItem('hc_session_token', discordToken);
+        }
+        if (discordUserParam) {
+            try {
+                localStorage.setItem('roblox_user', decodeURIComponent(discordUserParam));
+                localStorage.setItem('discord_user', decodeURIComponent(discordUserParam));
+            } catch (_) {}
+        }
         localStorage.setItem('discord_oauth_event', Date.now().toString());
 
         if (window.opener && !window.opener.closed) {
             try {
-                window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS' }, '*');
+                window.opener.postMessage({ 
+                    type: 'DISCORD_AUTH_SUCCESS',
+                    token: discordToken,
+                    user: discordUserParam
+                }, '*');
             } catch (_) {}
-            renderAuthCallbackNotice('Connected to Discord!', 'Discord account linked. Closing tab...', true);
+            renderAuthCallbackNotice('Connected to Discord!', 'Discord account connected. Closing tab...', true);
             setTimeout(() => { window.close(); }, 700);
             return;
         }
@@ -960,8 +975,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     navLinkHome.addEventListener('click', e => { e.preventDefault(); resetValuesToTrending(); setView('home'); });
     navLinkValues.addEventListener('click', e => {
         e.preventDefault();
-        if (!localStorage.getItem('roblox_user')) {
-            alert('Please connect your Roblox account to see values.');
+        if (!localStorage.getItem('hc_session_token')) {
+            alert('Please log in with Discord to see values.');
             const btnConnect = document.getElementById('connect-roblox-btn');
             if (btnConnect) btnConnect.click();
             return;
@@ -975,8 +990,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     navLinkExclusive.addEventListener('click', e => {
         e.preventDefault();
-        if (!localStorage.getItem('roblox_user')) {
-            alert('Please connect your Roblox account to see exclusive items.');
+        if (!localStorage.getItem('hc_session_token')) {
+            alert('Please log in with Discord to see exclusive items.');
             const btnConnect = document.getElementById('connect-roblox-btn');
             if (btnConnect) btnConnect.click();
             return;
@@ -1151,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let resolvedUser = null; // declared early to avoid TDZ when openConnectModal/logoutUser run before line 2298
 
-    /* ── Auth Wizard Controller (3-step mandatory verification) ── */
+    /* ── Auth Wizard Controller (Discord-based verification) ── */
     const AuthWizard = {
         currentStep: 1,
 
@@ -1160,37 +1175,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const row1 = document.getElementById('auth-step-row-1');
             const row2 = document.getElementById('auth-step-row-2');
-            const row3 = document.getElementById('auth-step-row-3');
 
-            const btnRoblox = document.getElementById('btn-auth-roblox');
-            const chipRoblox = document.getElementById('auth-step-1-completed');
-            const avatarRoblox = document.getElementById('auth-roblox-avatar');
-            const nameRoblox = document.getElementById('auth-roblox-name');
-
-            const btnDiscord = document.getElementById('btn-connect-discord-oauth');
-            const chipDiscord = document.getElementById('auth-step-2-completed');
+            const btnDiscord = document.getElementById('btn-auth-discord') || document.getElementById('btn-connect-discord-oauth');
+            const chipDiscord = document.getElementById('auth-step-1-completed');
             const avatarDiscord = document.getElementById('auth-discord-avatar');
             const nameDiscord = document.getElementById('auth-discord-name');
 
             const btnJoin = document.getElementById('btn-join-discord-server');
             const btnCheck = document.getElementById('btn-check-discord-membership');
-            const chipServer = document.getElementById('auth-step-3-completed');
+            const chipServer = document.getElementById('auth-step-2-completed');
             const pollNotice = document.getElementById('auth-card-poll-notice');
 
             // Reset rows
-            [row1, row2, row3].forEach(r => { if (r) r.className = 'auth-step-row'; });
+            [row1, row2].forEach(r => { if (r) r.className = 'auth-step-row'; });
 
-            // STEP 1 State
+            // STEP 1 State (Connect Discord)
             if (step === 1) {
                 if (row1) row1.classList.add('active');
-                if (btnRoblox) btnRoblox.style.display = 'flex';
-                if (chipRoblox) chipRoblox.style.display = 'none';
-
-                if (row2) row2.classList.add('locked');
-                if (btnDiscord) { btnDiscord.classList.add('disabled'); btnDiscord.removeAttribute('href'); }
+                if (btnDiscord) btnDiscord.style.display = 'inline-flex';
                 if (chipDiscord) chipDiscord.style.display = 'none';
 
-                if (row3) row3.classList.add('locked');
+                if (row2) row2.classList.add('locked');
                 if (btnJoin) btnJoin.classList.add('disabled');
                 if (btnCheck) { btnCheck.classList.add('disabled'); btnCheck.style.display = 'none'; }
                 if (chipServer) chipServer.style.display = 'none';
@@ -1198,56 +1203,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (step === 2) {
                 // Step 1 Completed
                 if (row1) row1.classList.add('completed');
-                if (btnRoblox) btnRoblox.style.display = 'none';
-                if (chipRoblox) {
-                    chipRoblox.style.display = 'flex';
-                    if (user) {
-                        if (avatarRoblox) avatarRoblox.src = user.avatarUrl || 'shield.png';
-                        if (nameRoblox) nameRoblox.textContent = `@${user.username || 'User'}`;
-                    }
-                }
-
-                // Step 2 Active
-                if (row2) row2.classList.add('active');
-                if (btnDiscord) {
-                    btnDiscord.classList.remove('disabled');
-                    const token = localStorage.getItem('hc_session_token') || '';
-                    btnDiscord.href = getApiUrl(`/api/auth/discord/login?token=${encodeURIComponent(token)}`);
-                    btnDiscord.style.display = 'flex';
-                }
-                if (chipDiscord) chipDiscord.style.display = 'none';
-
-                // Step 3 Locked
-                if (row3) row3.classList.add('locked');
-                if (btnJoin) btnJoin.classList.add('disabled');
-                if (btnCheck) { btnCheck.classList.add('disabled'); btnCheck.style.display = 'none'; }
-                if (chipServer) chipServer.style.display = 'none';
-                if (pollNotice) pollNotice.style.display = 'none';
-            } else if (step === 3) {
-                // Step 1 Completed
-                if (row1) row1.classList.add('completed');
-                if (btnRoblox) btnRoblox.style.display = 'none';
-                if (chipRoblox) {
-                    chipRoblox.style.display = 'flex';
-                    if (user) {
-                        if (avatarRoblox) avatarRoblox.src = user.avatarUrl || 'shield.png';
-                        if (nameRoblox) nameRoblox.textContent = `@${user.username || 'User'}`;
-                    }
-                }
-
-                // Step 2 Completed
-                if (row2) row2.classList.add('completed');
                 if (btnDiscord) btnDiscord.style.display = 'none';
                 if (chipDiscord) {
                     chipDiscord.style.display = 'flex';
-                    if (discord) {
-                        if (avatarDiscord && discord.discordAvatar) avatarDiscord.src = discord.discordAvatar;
-                        if (nameDiscord && discord.discordUsername) nameDiscord.textContent = `@${discord.discordUsername}`;
-                    }
+                    const av = user?.avatarUrl || discord?.discordAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    const name = user?.username || discord?.discordUsername || 'Discord User';
+                    if (avatarDiscord) avatarDiscord.src = av;
+                    if (nameDiscord) nameDiscord.textContent = `@${name}`;
                 }
 
-                // Step 3 Active
-                if (row3) row3.classList.add('active');
+                // Step 2 Active (Join Discord Server)
+                if (row2) row2.classList.add('active');
                 if (btnJoin) {
                     btnJoin.classList.remove('disabled');
                     if (discord && discord.inviteLink) btnJoin.href = discord.inviteLink;
@@ -1411,12 +1377,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Explicit new tab openers on buttons
-    const btnAuthRobloxEl = document.getElementById('btn-auth-roblox');
-    if (btnAuthRobloxEl) {
-        btnAuthRobloxEl.target = '_blank';
-        btnAuthRobloxEl.addEventListener('click', (e) => {
+    const btnAuthDiscordEl = document.getElementById('btn-auth-discord') || document.getElementById('btn-auth-roblox');
+    if (btnAuthDiscordEl) {
+        btnAuthDiscordEl.target = '_blank';
+        btnAuthDiscordEl.addEventListener('click', (e) => {
             e.preventDefault();
-            const w = window.open('/api/auth/roblox/login', '_blank');
+            const w = window.open('/api/auth/discord/login', '_blank');
             if (w) w.focus();
         });
     }
@@ -1797,17 +1763,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (btnGenerateToken) {
         btnGenerateToken.addEventListener('click', async () => {
-            const robloxUsername = (gentokenRobloxInput?.value || '').trim();
-            const discordId      = (gentokenDiscordIdInput?.value || '').trim();
+            const discordId       = (gentokenDiscordIdInput?.value || '').trim();
             const discordUsername = (gentokenDiscordName?.value || '').trim();
 
             if (gentokenResult)  gentokenResult.style.display  = 'none';
             if (gentokenError)   { gentokenError.style.display = 'none'; gentokenError.textContent = ''; }
 
-            if (!robloxUsername) {
-                if (gentokenError) { gentokenError.textContent = 'Roblox username is required.'; gentokenError.style.display = 'block'; }
-                return;
-            }
             if (!discordId) {
                 if (gentokenError) { gentokenError.textContent = 'Discord User ID is required.'; gentokenError.style.display = 'block'; }
                 return;
@@ -1821,20 +1782,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     method: 'POST',
                     headers: getAdminHeaders(),
                     credentials: 'same-origin',
-                    body: JSON.stringify({ robloxUsername, discordId, discordUsername })
+                    body: JSON.stringify({ discordId, discordUsername })
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     if (gentokenValue)       gentokenValue.textContent = data.token;
-                    if (gentokenUserInfo)    gentokenUserInfo.textContent = `👤 ${data.user.displayName} (@${data.user.username}) — Roblox ID: ${data.user.id}`;
+                    if (gentokenUserInfo)    gentokenUserInfo.textContent = `👤 ${data.user.displayName} (@${data.user.username}) — Discord ID: ${data.user.id}`;
                     if (gentokenExpiresInfo && data.expiresAt) {
                         const exp = new Date(data.expiresAt);
                         gentokenExpiresInfo.textContent = `⏳ Expires: ${exp.toLocaleString()} (30 days)`;
                     }
                     if (gentokenResult) gentokenResult.style.display = 'block';
                     // Clear fields
-                    if (gentokenRobloxInput)    gentokenRobloxInput.value    = '';
                     if (gentokenDiscordIdInput) gentokenDiscordIdInput.value = '';
                     if (gentokenDiscordName)    gentokenDiscordName.value    = '';
                 } else {
@@ -1963,11 +1923,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderSessions(sessions) {
         if (!sessionsGrid) return;
         sessionsGrid.innerHTML = '';
-        if (sessions.length === 0) {
+        if (!sessions || sessions.length === 0) {
             sessionsGrid.innerHTML = '<div style="color:var(--text-3); font-size:0.8rem; text-align: center; padding: 1rem;">No connected users.</div>';
             return;
         }
+
+        // Deduplicate by user ID so each user only appears once
+        const seenUsers = new Set();
+        const uniqueSessions = [];
         sessions.forEach(session => {
+            const uId = String(session.userId || session.discordId || '').trim();
+            const key = uId || session.token;
+            if (!seenUsers.has(key)) {
+                seenUsers.add(key);
+                uniqueSessions.push(session);
+            }
+        });
+
+        if (uniqueSessions.length === 0) {
+            sessionsGrid.innerHTML = '<div style="color:var(--text-3); font-size:0.8rem; text-align: center; padding: 1rem;">No connected users.</div>';
+            return;
+        }
+
+        uniqueSessions.forEach(session => {
             const card = document.createElement('div');
             card.style.display = 'flex';
             card.style.alignItems = 'center';
@@ -1982,9 +1960,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             card.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <img src="${session.avatarUrl || 'assets/placeholder-roblox.png'}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: #111; object-fit: cover;">
+                    <img src="${session.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: #111; object-fit: cover;">
                     <div style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-1);">${session.displayName}</span>
+                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-1);">${session.displayName || session.username}</span>
                         <span style="font-size: 0.7rem; color: var(--text-3);">@${session.username} (ID: ${session.userId})${session.isAdmin ? ' <span style="color: var(--accent); font-weight: bold;">[Admin]</span>' : ''}</span>
                     </div>
                 </div>
@@ -1993,6 +1971,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             sessionsGrid.appendChild(card);
+        });
+    }
+
+    const btnLogoutAll = document.getElementById('admin-btn-logout-all');
+    if (btnLogoutAll) {
+        btnLogoutAll.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to log everyone out? This will revoke all active sessions immediately.')) {
+                return;
+            }
+            btnLogoutAll.disabled = true;
+            btnLogoutAll.textContent = 'Logging out all…';
+            try {
+                const res = await fetch('/api/admin/logout-all', {
+                    method: 'POST',
+                    headers: getAdminHeaders(),
+                    credentials: 'same-origin'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('All active sessions have been revoked.');
+                    await logoutUser();
+                } else {
+                    alert(data.message || 'Failed to revoke sessions.');
+                    btnLogoutAll.disabled = false;
+                    btnLogoutAll.textContent = 'Log Everyone Out';
+                }
+            } catch (err) {
+                alert('Network error when logging out all.');
+                btnLogoutAll.disabled = false;
+                btnLogoutAll.textContent = 'Log Everyone Out';
+            }
         });
     }
 
@@ -2631,7 +2640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const selected = btn.getAttribute('data-vote');
                     const token = localStorage.getItem('hc_session_token') || '';
                     if (!token) {
-                        alert('Please connect your Roblox account to vote.');
+                        alert('Please log in with Discord to vote.');
                         const btnConnect = document.getElementById('connect-roblox-btn');
                         if (btnConnect) btnConnect.click();
                         return;
@@ -2834,28 +2843,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </button>
                 <div class="user-profile-widget" id="user-profile-widget">
                     <div class="user-avatar-ring">
-                        <img class="user-avatar-img" src="${user.avatarUrl || 'shield.png'}" alt="${user.displayName}">
+                        <img class="user-avatar-img" src="${user.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${user.displayName}">
                     </div>
                     <div class="user-info-text">
-                        <span class="user-display-name">${user.displayName}</span>
+                        <span class="user-display-name">${user.displayName || user.username}</span>
                         <span class="user-username">@${user.username}</span>
                     </div>
                     <span class="user-dropdown-arrow">&#9662;</span>
                     
                     <div class="user-dropdown-menu" id="user-dropdown-menu">
-                        <img class="user-dropdown-avatar" src="${user.avatarUrl || 'shield.png'}" alt="Avatar">
+                        <img class="user-dropdown-avatar" src="${user.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar">
                         <div class="user-dropdown-name-wrap">
-                            <div class="user-dropdown-display-name">${user.displayName}</div>
+                            <div class="user-dropdown-display-name">${user.displayName || user.username}</div>
                             <div class="user-dropdown-username">@${user.username}</div>
-                            <div class="roblox-verified-badge">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                    <path d="M20 6L9 17l-5-5"></path>
-                                </svg> Verified User
+                            <div class="roblox-verified-badge discord-badge" style="margin-top: 0.25rem; color: #5865F2;">
+                                <svg width="12" height="12" viewBox="0 0 127.14 96.36" fill="currentColor">
+                                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                                </svg>
+                                <span>Verified Discord User</span>
                             </div>
-                            ${discordBadgeHtml}
                         </div>
-                        <a href="https://www.roblox.com/users/${user.id}/profile" target="_blank" class="user-dropdown-btn primary">View Roblox Profile</a>
-                        <button id="roblox-btn-logout" class="user-dropdown-btn danger">Disconnect Account</button>
+                        <button id="roblox-btn-logout" class="user-dropdown-btn danger" style="margin-top: 0.5rem;">Log Out</button>
                     </div>
                 </div>
             `;
@@ -2892,11 +2900,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         } else {
             navUserArea.innerHTML = `
-                <button class="connect-roblox-btn" id="connect-roblox-btn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M18.8,19.9L5.3,16.3L8.9,2.8L22.4,6.4L18.8,19.9z M12.1,8.3l-2,7.3l5.5,1.5l2-7.3L12.1,8.3z" />
+                <button class="connect-roblox-btn" id="connect-roblox-btn" style="background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);">
+                    <svg width="16" height="16" viewBox="0 0 127.14 96.36" fill="currentColor">
+                        <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
                     </svg>
-                    <span>Connect Roblox</span>
+                    <span>Login with Discord</span>
                 </button>
             `;
             
@@ -3276,22 +3284,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             return true;
         }
 
-        // Step 2: Discord not yet connected
-        if (!discord.connected) {
+        // Step 1: Discord not yet connected
+        if (!user || !discord.connected) {
             stopDiscordPolling();
             document.getElementById('page-wrapper').style.display = 'none';
             document.getElementById('dynamic-island').style.display = 'none';
 
-            AuthWizard.open(2, user, discord);
+            AuthWizard.open(1, user, discord);
             return false;
         }
 
-        // Step 3: Not yet in server
+        // Step 2: Not yet in server
         if (!discord.inServer) {
             document.getElementById('page-wrapper').style.display = 'none';
             document.getElementById('dynamic-island').style.display = 'none';
 
-            AuthWizard.open(3, user, discord);
+            AuthWizard.open(2, user, discord);
 
             if (!discordPollInterval) {
                 discordPollInterval = setInterval(checkDiscordMembershipNow, 5000);

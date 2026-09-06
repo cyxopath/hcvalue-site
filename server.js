@@ -13,7 +13,19 @@ const crypto  = require('crypto');
 
 const app  = express();
 const PORT = process.env.PORT || 8000;
-const ADMIN_USER_ID = 1945506007;
+const ADMIN_USER_ID = 1945506007; // Legacy fallback
+const ADMIN_DISCORD_ID = process.env.ADMIN_DISCORD_ID || '1512110331718013121';
+const ADMIN_DISCORD_IDS = [
+    (process.env.ADMIN_DISCORD_ID || '').trim(),
+    '1512110331718013121', // Primary Discord Admin ID
+    '1945506007'           // Fallback
+].filter(Boolean);
+
+function isUserAdmin(userId) {
+    if (!userId) return false;
+    return ADMIN_DISCORD_IDS.includes(String(userId));
+}
+
 const DATA_ACCESS_COOKIE = 'hc_data_session';
 const SESSION_COOKIE_NAME = 'hc_session_token';
 const SESSION_TTL_DAYS = 30;
@@ -156,6 +168,20 @@ function persistSession(session) {
     if (!session || !session.token) return;
     session.loginTime = session.loginTime || Date.now();
     session.expiresAt = session.expiresAt || session.loginTime + SESSION_TTL_MS;
+
+    // Clear any existing session for this user ID so they are not logged in multiple times
+    const currentUserId = String(session.userId || session.discordId || '').trim();
+    if (currentUserId) {
+        for (const [existingToken, existingSession] of userSessions.entries()) {
+            if (existingToken === session.token) continue;
+            const existingId = String(existingSession.userId || existingSession.discordId || '').trim();
+            if (existingId && existingId === currentUserId) {
+                userSessions.delete(existingToken);
+                activeSessions.delete(existingToken);
+            }
+        }
+    }
+
     userSessions.set(session.token, session);
     if (session.isAdmin) activeSessions.add(session.token);
     saveSessionsToDisk();
@@ -444,16 +470,18 @@ function loadPersistedSessions() {
         if (s && s.token) {
             // Discard sessions older than 30 days
             if (Date.now() - s.loginTime < 30 * 24 * 60 * 60 * 1000) {
+                const uId = String(s.userId || s.discordId || '');
                 // If this user already has a loaded session, remove the older one
-                if (userToLatestToken.has(s.userId)) {
-                    const oldToken = userToLatestToken.get(s.userId);
+                if (uId && userToLatestToken.has(uId)) {
+                    const oldToken = userToLatestToken.get(uId);
                     userSessions.delete(oldToken);
                     activeSessions.delete(oldToken);
                 }
                 
                 userSessions.set(s.token, s);
-                userToLatestToken.set(s.userId, s.token);
-                if (s.isAdmin) {
+                if (uId) userToLatestToken.set(uId, s.token);
+                if (s.isAdmin || isUserAdmin(s.userId)) {
+                    s.isAdmin = true;
                     activeSessions.add(s.token);
                 }
             }
@@ -479,7 +507,7 @@ function getActiveSession(token) {
 function requireAdmin(req, res, next) {
     const token = getRequestSessionToken(req);
     const session = getActiveSession(token);
-    if (session && session.isAdmin && Number(session.userId) === ADMIN_USER_ID) {
+    if (session && session.isAdmin && isUserAdmin(session.userId)) {
         req.userSession = session;
         return next();
     }
@@ -503,14 +531,17 @@ function requirePricesAccess(req, res, next) {
         }
         
         // Owner always has access
-        if (Number(session.userId) === ADMIN_USER_ID) {
+        if (isUserAdmin(session.userId)) {
             req.userSession = session;
             return next();
         }
         
         // Read whitelist
         const whitelist = loadJSON(PRICES_WHITELIST_FILE, []);
-        const isWhitelisted = whitelist.some(item => Number(item.userId) === Number(session.userId));
+        const isWhitelisted = whitelist.some(item => 
+            String(item.userId) === String(session.userId) || 
+            (item.username && String(item.username).toLowerCase() === String(session.username).toLowerCase())
+        );
         if (isWhitelisted) {
             req.userSession = session;
             return next();
@@ -555,7 +586,7 @@ app.post('/api/login', (req, res) => {
         const mockToken = 'mock_dev_token';
         const session = {
             token: mockToken,
-            userId: ADMIN_USER_ID,
+            userId: ADMIN_DISCORD_ID,
             username: 'cyxopathic',
             displayName: 'Developer',
             avatarUrl: 'shield.png',
@@ -572,351 +603,37 @@ app.post('/api/login', (req, res) => {
 /* ── Blocklist helper check ──────────────────────────────────────── */
 function isUserBlocked(userId, username) {
     const blocklist = loadJSON(BLOCKLIST_FILE, []);
+    const strId = String(userId || '').trim();
+    const lowUser = String(username || '').toLowerCase().trim();
     return blocklist.some(item => {
         if (!item) return false;
         if (typeof item === 'object') {
-            const matchId = item.userId && (Number(item.userId) === Number(userId));
-            const matchName = item.username && username && (String(item.username).toLowerCase() === String(username).toLowerCase());
+            const matchId = item.userId && (String(item.userId).trim() === strId);
+            const matchName = item.username && lowUser && (String(item.username).toLowerCase().trim() === lowUser);
             return matchId || matchName;
         }
-        return Number(item) === Number(userId) || String(item) === String(userId) || (username && String(item).toLowerCase() === String(username).toLowerCase());
+        const strItem = String(item).trim();
+        return strItem === strId || (lowUser && strItem.toLowerCase() === lowUser);
     });
 }
 
-/* ── Roblox: resolve username → full user object ─────────────────── */
-app.get('/api/roblox/resolve', async (req, res) => {
-    const { username } = req.query;
-    if (!username) return res.json({ success: false, message: 'Username is required.' });
-
-    try {
-        /* 1. Resolve username → userId */
-        const search = await httpsPost(
-            'https://users.roblox.com/v1/usernames/users',
-            { usernames: [username], excludeBannedUsers: false }
-        );
-        if (!search.data || search.data.length === 0) {
-            return res.json({ success: false, message: 'Roblox user not found. Double-check the username.' });
-        }
-        const userId = search.data[0].id;
-
-        /* 2. Check blocklist immediately */
-        if (isUserBlocked(userId, username)) {
-            return res.json({ success: false, message: 'Your account has been Blacklisted from accessing this site. Message @imthesickness on Discord or seek help in the Support Server' });
-        }
-
-        /* 3. Get full profile */
-        const profile = await httpsGet(`https://users.roblox.com/v1/users/${userId}`);
-
-        /* 4. Account-age gate: must be ≥ 30 days old */
-        const created = new Date(profile.created);
-        const ageDays = (Date.now() - created.getTime()) / 86_400_000;
-        if (ageDays < 30) {
-            return res.json({
-                success: false,
-                message: `Account too new. Your Roblox account must be at least 30 days old. ` +
-                         `Yours is ${Math.floor(ageDays)} day${Math.floor(ageDays) !== 1 ? 's' : ''} old.`
-            });
-        }
-
-        /* 5. Avatar thumbnail (optional, best-effort) */
-        let avatarUrl = null;
-        try {
-            const av = await httpsGet(
-                `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-            );
-            avatarUrl = av.data?.[0]?.imageUrl || null;
-        } catch (_) { /* avatar is non-critical */ }
-
-        res.json({
-            success    : true,
-            id         : userId,
-            username   : profile.name,
-            displayName: profile.displayName,
-            avatarUrl,
-            created    : profile.created,
-            ageDays    : Math.floor(ageDays)
-        });
-
-    } catch (err) {
-        res.json({ success: false, message: 'Could not reach Roblox API: ' + err.message });
-    }
+/* ── Retired Roblox Endpoints (Redirect to Discord) ──────────────── */
+app.get(['/api/auth/roblox/login', '/api/auth/roblox/callback'], (req, res) => {
+    return res.redirect('/api/auth/discord/login');
 });
 
-/* ── Roblox OAuth 2.0 Authentication ──────────────────────────────── */
-const robloxStates = new Map();
-setInterval(() => {
-    const now = Date.now();
-    for (const [state, data] of robloxStates.entries()) {
-        if (data.expiresAt < now) robloxStates.delete(state);
-    }
-}, 60 * 1000);
-
-/* Initiate Roblox OAuth login */
-app.get('/api/auth/roblox/login', (req, res) => {
-    const clientId = (process.env.ROBLOX_CLIENT_ID || '').trim();
-    if (!clientId) {
-        return res.status(500).send('Roblox Client ID is not configured on the server.');
-    }
-
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.get('host') || 'localhost:8000';
-    let redirectUri = `${protocol}://${host}/api/auth/roblox/callback`;
-    if (process.env.ROBLOX_REDIRECT_URI && !host.includes('localhost') && !host.includes('127.0.0.1')) {
-        redirectUri = process.env.ROBLOX_REDIRECT_URI.trim();
-    }
-
-    const state = crypto.randomBytes(24).toString('hex');
-    robloxStates.set(state, {
-        expiresAt: Date.now() + 10 * 60 * 1000
-    });
-
-    const robloxAuthUrl = `https://apis.roblox.com/oauth/v1/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20profile&state=${state}&prompt=select_account%20consent`;
-    res.redirect(robloxAuthUrl);
+app.get('/api/roblox/resolve', (req, res) => {
+    return res.json({ success: false, message: 'Roblox authentication is deprecated. Please log in with Discord.' });
 });
 
-/* Roblox OAuth callback */
-app.get('/api/auth/roblox/callback', async (req, res) => {
-    const { code, state, error } = req.query;
-    if (error) {
-        return res.redirect(`/?roblox_error=${encodeURIComponent(error)}`);
-    }
-    if (!state || !robloxStates.has(state)) {
-        return res.redirect('/?roblox_error=invalid_state');
-    }
-
-    const stateData = robloxStates.get(state);
-    robloxStates.delete(state);
-
-    if (Date.now() > stateData.expiresAt) {
-        return res.redirect('/?roblox_error=state_expired');
-    }
-
-    const clientId = (process.env.ROBLOX_CLIENT_ID || '').trim();
-    const clientSecret = (process.env.ROBLOX_CLIENT_SECRET || '').trim();
-    if (!clientId || !clientSecret) {
-        return res.redirect('/?roblox_error=missing_credentials');
-    }
-
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.get('host') || 'localhost:8000';
-    let redirectUri = `${protocol}://${host}/api/auth/roblox/callback`;
-    if (process.env.ROBLOX_REDIRECT_URI && !host.includes('localhost') && !host.includes('127.0.0.1')) {
-        redirectUri = process.env.ROBLOX_REDIRECT_URI.trim();
-    }
-
-    try {
-        const formBody = new URLSearchParams({
-            client_id: clientId,
-            client_secret: clientSecret,
-            grant_type: 'authorization_code',
-            code: String(code),
-            redirect_uri: redirectUri
-        }).toString();
-
-        const tokenRes = await httpsRequest('https://apis.roblox.com/oauth/v1/token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: formBody
-        });
-
-        if (tokenRes.statusCode !== 200 || !tokenRes.body || !tokenRes.body.access_token) {
-            console.error('[Roblox OAuth] Token exchange error:', tokenRes.body);
-            const errMsg = tokenRes.body?.error_description || tokenRes.body?.error || 'token_exchange_failed';
-            return res.redirect(`/?roblox_error=${encodeURIComponent(errMsg)}`);
-        }
-
-        const accessToken = tokenRes.body.access_token;
-
-        // Fetch User Info from Roblox OpenID UserInfo endpoint
-        const userInfoRes = await httpsRequest('https://apis.roblox.com/oauth/v1/userinfo', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            }
-        });
-
-        if (userInfoRes.statusCode !== 200 || !userInfoRes.body || !userInfoRes.body.sub) {
-            console.error('[Roblox OAuth] UserInfo error:', userInfoRes.body);
-            return res.redirect('/?roblox_error=failed_to_fetch_user_info');
-        }
-
-        const userInfo = userInfoRes.body;
-        const userId = Number(userInfo.sub);
-        const username = userInfo.preferred_username || userInfo.name || `User_${userId}`;
-        const displayName = userInfo.nickname || userInfo.name || username;
-
-        // Blocklist check
-        if (isUserBlocked(userId, username)) {
-            return res.redirect('/?roblox_error=blacklisted');
-        }
-
-        // Account-age gate check (fetch user profile from public API)
-        try {
-            const profile = await httpsGet(`https://users.roblox.com/v1/users/${userId}`);
-            if (profile && profile.created) {
-                const created = new Date(profile.created);
-                const ageDays = (Date.now() - created.getTime()) / 86_400_000;
-                if (ageDays < 30) {
-                    return res.redirect(`/?roblox_error=account_too_new_must_be_30_days_old`);
-                }
-            }
-        } catch (_) {}
-
-        // Fetch avatar thumbnail headshot
-        let avatarUrl = userInfo.picture || null;
-        if (!avatarUrl) {
-            try {
-                const av = await httpsGet(
-                    `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-                );
-                avatarUrl = av.data?.[0]?.imageUrl || null;
-            } catch (_) {}
-        }
-
-        const isAdmin = Number(userId) === ADMIN_USER_ID;
-
-        // Clean up any existing sessions for this user ID
-        for (const [t, s] of userSessions.entries()) {
-            if (Number(s.userId) === Number(userId)) {
-                userSessions.delete(t);
-                activeSessions.delete(t);
-            }
-        }
-
-        const userToken = crypto.randomBytes(32).toString('hex');
-        const userObj = {
-            id: userId,
-            username: username,
-            displayName: displayName,
-            avatarUrl: avatarUrl || 'assets/placeholder-roblox.png',
-            loginTime: Date.now(),
-            isAdmin: isAdmin
-        };
-
-        const newSession = {
-            token: userToken,
-            userId: userId,
-            username: username,
-            displayName: displayName,
-            avatarUrl: avatarUrl || 'assets/placeholder-roblox.png',
-            loginTime: Date.now(),
-            expiresAt: Date.now() + SESSION_TTL_MS,
-            isAdmin: isAdmin
-        };
-        persistSession(newSession);
-
-        if (isAdmin) {
-            activeSessions.add(userToken);
-        }
-        setSessionCookie(req, res, userToken);
-
-        // Save/update combined profile in discord-links.json
-        try {
-            const allLinks = loadDiscordLinks();
-            const existingLink = allLinks[String(userId)] || {};
-            allLinks[String(userId)] = {
-                ...existingLink,
-                robloxUserId: userId,
-                robloxUsername: username,
-                robloxDisplayName: displayName,
-                robloxAvatar: avatarUrl || 'assets/placeholder-roblox.png',
-                robloxLinkedAt: existingLink.robloxLinkedAt || new Date().toISOString(),
-                lastLoginAt: new Date().toISOString()
-            };
-            saveDiscordLinks(allLinks);
-        } catch (e) {
-            console.warn('[Roblox OAuth] Failed to save link to discord-links.json:', e);
-        }
-
-        const safeUserJson = encodeURIComponent(JSON.stringify(userObj));
-        return res.redirect(`/?roblox_success=1&roblox_token=${encodeURIComponent(userToken)}&roblox_user=${safeUserJson}`);
-
-    } catch (err) {
-        console.error('[Roblox OAuth] Callback error:', err);
-        return res.redirect(`/?roblox_error=${encodeURIComponent(err.message || 'unknown_error')}`);
-    }
+app.get('/api/roblox/verify', (req, res) => {
+    return res.json({ success: false, verified: false, message: 'Roblox verification is deprecated. Please log in with Discord.' });
 });
 
 /* ── Verify words list ─────────────────────────────────────────── */
 app.get('/api/verify-words', (req, res) => {
     const words = loadJSON(VERIFY_WORDS_FILE, []);
     res.json(words);
-});
-
-/* ── Roblox: verify bio phrase (fallback) ────────────────────────── */
-app.get('/api/roblox/verify', async (req, res) => {
-    const { userId, phrase } = req.query;
-    if (!userId || !phrase) {
-        return res.json({ success: false, verified: false, message: 'Missing parameters.' });
-    }
-
-    /* Re-check blocklist on every verify attempt — no bypass */
-    if (isUserBlocked(userId)) {
-        return res.json({ success: false, verified: false, message: 'This account is blocked.' });
-    }
-
-    try {
-        const profile  = await httpsGet(`https://users.roblox.com/v1/users/${userId}`);
-        const bio      = (profile.description || '') + '';
-        const verified = bio.toLowerCase().includes(String(phrase || '').toLowerCase());
-        const isAdmin  = Number(userId) === ADMIN_USER_ID;
-
-        let userToken = null;
-        let adminToken = null;
-
-        if (verified) {
-            // Get user's avatar headshot
-            let avatarUrl = null;
-            try {
-                const av = await httpsGet(
-                    `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-                );
-                avatarUrl = av.data?.[0]?.imageUrl || null;
-            } catch (_) {}
-
-            // Clean up any existing sessions for this user ID to prevent duplicates
-            for (const [token, session] of userSessions.entries()) {
-                if (Number(session.userId) === Number(userId)) {
-                    userSessions.delete(token);
-                    activeSessions.delete(token);
-                }
-            }
-
-            userToken = require('crypto').randomBytes(32).toString('hex');
-            const newSession = {
-                token: userToken,
-                userId: Number(userId),
-                username: profile.name,
-                displayName: profile.displayName,
-                avatarUrl: avatarUrl || 'assets/placeholder-roblox.png',
-                loginTime: Date.now(),
-                expiresAt: Date.now() + SESSION_TTL_MS,
-                isAdmin: isAdmin
-            };
-            persistSession(newSession);
-
-            if (isAdmin) {
-                adminToken = userToken;
-                activeSessions.add(adminToken);
-            }
-            setSessionCookie(req, res, userToken);
-        }
-
-        res.json({
-            success : true,
-            verified,
-            isAdmin,
-            userToken,
-            adminToken,
-            message : verified
-                ? 'Verified successfully!'
-                : 'Phrase not found in your Roblox profile bio. Make sure you saved your profile after adding the code.'
-        });
-    } catch (err) {
-        res.json({ success: false, verified: false, message: 'Could not reach Roblox API: ' + err.message });
-    }
 });
 
 /* ── Discord OAuth & Verification Helpers ────────────────────────── */
@@ -1156,7 +873,8 @@ app.post('/api/validate-session', async (req, res) => {
     };
 
     if (discordCfg.enabled) {
-        const link = getDiscordLinkForUser(session.userId);
+        const discordId = session.discordId || session.userId;
+        const link = getDiscordLinkForUser(session.userId) || (discordId ? getDiscordLinkForUser(discordId) : null);
         if (link && link.accessToken) {
             const discordUser = await validateDiscordToken(link.accessToken);
             if (discordUser === false) {
@@ -1175,6 +893,14 @@ app.post('/api/validate-session', async (req, res) => {
                 link.discordUsername = discordStatus.discordUsername;
                 saveDiscordLinkForUser(session.userId, link);
             }
+        } else if (discordId) {
+            // User authenticated via Discord OAuth or Discord token
+            discordStatus.connected = true;
+            discordStatus.discordId = String(discordId);
+            discordStatus.discordUsername = session.displayName || session.username;
+            discordStatus.discordAvatar = session.avatarUrl;
+            const isMember = await verifyDiscordGuildMembership(String(discordId), null, discordCfg.guildId);
+            discordStatus.inServer = isMember;
         }
     } else {
         discordStatus.connected = true;
@@ -1216,6 +942,25 @@ app.post('/api/auth/token-login', (req, res) => {
     if (isUserBlocked(session.userId, session.username)) {
         return res.json({ success: false, message: 'Account is blocked.' });
     }
+
+    // Clear any other active sessions for this user so they only appear once
+    const currentUserId = String(session.userId || session.discordId || '').trim();
+    if (currentUserId) {
+        let clearedOther = false;
+        for (const [existingToken, existingSession] of userSessions.entries()) {
+            if (existingToken === t) continue;
+            const existingId = String(existingSession.userId || existingSession.discordId || '').trim();
+            if (existingId && existingId === currentUserId) {
+                userSessions.delete(existingToken);
+                activeSessions.delete(existingToken);
+                clearedOther = true;
+            }
+        }
+        if (clearedOther) {
+            saveSessionsToDisk();
+        }
+    }
+
     setSessionCookie(req, res, t);
     return res.json({
         success: true,
@@ -1243,102 +988,106 @@ app.post('/api/internal/session-sync', (req, res) => {
 
 /* ── Admin: generate a manual login token for a user ─────────────── */
 app.post('/api/admin/generate-token', requireAdmin, async (req, res) => {
-    const { robloxUsername, discordId, discordUsername } = req.body || {};
+    const { discordId, discordUsername } = req.body || {};
 
-    if (!robloxUsername || !robloxUsername.trim()) {
-        return res.json({ success: false, message: 'robloxUsername is required.' });
-    }
     if (!discordId || !discordId.trim()) {
         return res.json({ success: false, message: 'discordId (Discord User ID) is required.' });
     }
 
+    const cleanDiscordId = discordId.replace(/[<@!>]/g, '').trim();
+    if (!/^\d{17,20}$/.test(cleanDiscordId)) {
+        return res.json({ success: false, message: 'Invalid Discord User ID format. Must be a 17-20 digit ID.' });
+    }
+
     try {
-        /* 1. Resolve Roblox username → userId + profile */
-        const search = await httpsPost(
-            'https://users.roblox.com/v1/usernames/users',
-            { usernames: [robloxUsername.trim()], excludeBannedUsers: false }
-        );
-        if (!search.data || search.data.length === 0) {
-            return res.json({ success: false, message: `Roblox user "${robloxUsername}" not found.` });
+        let username = (discordUsername || '').trim();
+        let displayName = username || `Discord_${cleanDiscordId}`;
+        let avatarUrl = 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+        // Attempt lookup via Discord Bot API if bot token configured
+        const botToken = (process.env.DISCORD_BOT_TOKEN || '').trim();
+        if (botToken) {
+            try {
+                const userRes = await httpsRequest(`https://discord.com/api/v10/users/${cleanDiscordId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bot ${botToken}`,
+                        'User-Agent': 'HCValues/1.0'
+                    }
+                });
+                if (userRes.statusCode === 200 && userRes.body && userRes.body.id) {
+                    const u = userRes.body;
+                    username = u.username || username;
+                    displayName = u.global_name || u.username || displayName;
+                    if (u.avatar) {
+                        const ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
+                        avatarUrl = `https://cdn.discordapp.com/avatars/${cleanDiscordId}/${u.avatar}.${ext}?size=128`;
+                    }
+                }
+            } catch (e) {
+                console.warn('[generate-token] Discord user lookup error:', e.message);
+            }
         }
-        const userId    = search.data[0].id;
-        const username  = search.data[0].name;
-        const displayName = search.data[0].displayName || username;
 
         /* 2. Block-check */
-        if (isUserBlocked(userId, username)) {
-            return res.json({ success: false, message: `User "${username}" is on the blocklist.` });
+        if (isUserBlocked(cleanDiscordId, username)) {
+            return res.json({ success: false, message: `User "${username}" (ID: ${cleanDiscordId}) is on the blocklist.` });
         }
 
-        /* 3. Fetch avatar */
-        let avatarUrl = 'assets/placeholder-roblox.png';
-        try {
-            const av = await httpsGet(
-                `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-            );
-            if (av.data && av.data[0] && av.data[0].imageUrl) {
-                avatarUrl = av.data[0].imageUrl;
-            }
-        } catch (_) {}
-
-        /* 4. Revoke any existing session for this userId */
+        /* 3. Revoke any existing session for this Discord ID */
         for (const [existingToken, existingSession] of userSessions.entries()) {
-            if (Number(existingSession.userId) === Number(userId)) {
+            if (String(existingSession.userId) === cleanDiscordId || String(existingSession.discordId) === cleanDiscordId) {
                 userSessions.delete(existingToken);
                 activeSessions.delete(existingToken);
                 break;
             }
         }
 
-        /* 5. Create new session token */
+        /* 4. Create new session token */
         const userToken = crypto.randomBytes(32).toString('hex');
-        const isAdmin   = Number(userId) === ADMIN_USER_ID;
+        const isAdmin   = isUserAdmin(cleanDiscordId);
         const newSession = {
             token:       userToken,
-            userId:      userId,
-            username:    username,
+            userId:      cleanDiscordId,
+            username:    username || displayName,
             displayName: displayName,
             avatarUrl:   avatarUrl,
+            discordId:   cleanDiscordId,
             loginTime:   Date.now(),
             expiresAt:   Date.now() + SESSION_TTL_MS,
             isAdmin:     isAdmin,
-            manualToken: true   // flag so you can identify these in the sessions list
+            manualToken: true
         };
         persistSession(newSession);
         if (isAdmin) activeSessions.add(userToken);
 
-        /* 6. Save / update discord-links.json with provided Discord info */
+        /* 5. Save / update discord-links.json */
         try {
             const allLinks = loadDiscordLinks();
-            const existing = allLinks[String(userId)] || {};
-            allLinks[String(userId)] = {
+            const existing = allLinks[cleanDiscordId] || {};
+            allLinks[cleanDiscordId] = {
                 ...existing,
-                robloxUserId:      userId,
-                robloxUsername:    username,
-                robloxDisplayName: displayName,
-                robloxAvatar:      avatarUrl,
-                robloxLinkedAt:    existing.robloxLinkedAt || new Date().toISOString(),
-                lastLoginAt:       new Date().toISOString(),
-                // Store discord info provided by admin
-                discordId:         discordId.trim(),
-                discordUsername:   (discordUsername || '').trim() || existing.discordUsername || '',
-                manualToken:       true
+                discordId:       cleanDiscordId,
+                discordUsername: displayName,
+                discordAvatar:   avatarUrl,
+                lastLoginAt:     new Date().toISOString(),
+                manualToken:     true
             };
             saveDiscordLinks(allLinks);
         } catch (e) {
             console.warn('[generate-token] Failed to save discord-links.json:', e);
         }
 
-        console.log(`[generate-token] Admin generated token for ${username} (${userId}), Discord: ${discordId}`);
+        console.log(`[generate-token] Admin generated token for Discord user: ${cleanDiscordId} (${displayName})`);
 
         return res.json({
             success: true,
             token: userToken,
             user: {
-                id: userId,
-                username,
-                displayName,
-                avatarUrl
+                id: cleanDiscordId,
+                username: username || displayName,
+                displayName: displayName,
+                avatarUrl: avatarUrl
             },
             expiresAt: newSession.expiresAt
         });
@@ -1349,7 +1098,22 @@ app.post('/api/admin/generate-token', requireAdmin, async (req, res) => {
     }
 });
 
-/* ── Roblox: logout user session ─────────────────────────────────── */
+/* ── Admin: logout everyone (invalidate all sessions) ─────────────── */
+app.post('/api/admin/logout-all', requireAdmin, (req, res) => {
+    const totalCount = userSessions.size;
+    userSessions.clear();
+    activeSessions.clear();
+    saveSessionsToDisk();
+    clearSessionCookie(req, res);
+    console.log(`[Admin] Logged out all users (${totalCount} sessions invalidated)`);
+    res.json({
+        success: true,
+        count: totalCount,
+        message: `Successfully logged out all users (${totalCount} sessions terminated).`
+    });
+});
+
+/* ── Logout user session ─────────────────────────────────────────── */
 app.post('/api/logout', (req, res) => {
     const token = req.body?.token || getRequestSessionToken(req);
     if (token) {
@@ -1365,15 +1129,6 @@ app.post('/api/logout', (req, res) => {
 
 /* Initiate Discord OAuth */
 app.get('/api/auth/discord/login', (req, res) => {
-    const token = req.query.token || getRequestSessionToken(req);
-    if (!token || !userSessions.has(token)) {
-        return res.status(401).send('Roblox verification is required before connecting Discord.');
-    }
-    const session = userSessions.get(token);
-    if (isUserBlocked(session.userId, session.username)) {
-        return res.status(403).send('Account is blocked.');
-    }
-
     const clientId = (process.env.DISCORD_CLIENT_ID || '').trim();
     if (!clientId) {
         return res.status(500).send('Discord Client ID is not configured on the server. Set DISCORD_CLIENT_ID in .env file.');
@@ -1388,8 +1143,6 @@ app.get('/api/auth/discord/login', (req, res) => {
 
     const state = crypto.randomBytes(24).toString('hex');
     discordStates.set(state, {
-        token,
-        userId: session.userId,
         expiresAt: Date.now() + 10 * 60 * 1000
     });
 
@@ -1467,27 +1220,75 @@ app.get('/api/auth/discord/callback', async (req, res) => {
         }
 
         const discordUser = userRes.body;
+        const discordId = String(discordUser.id);
+        const username = discordUser.username || '';
+        const displayName = discordUser.global_name || discordUser.username || `User_${discordId}`;
+
+        // Blocklist check
+        if (isUserBlocked(discordId, username)) {
+            return res.redirect('/?discord_error=blacklisted');
+        }
+
         let avatarUrl = 'https://cdn.discordapp.com/embed/avatars/0.png';
         if (discordUser.avatar) {
             const ext = discordUser.avatar.startsWith('a_') ? 'gif' : 'png';
-            avatarUrl = `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.${ext}?size=128`;
+            avatarUrl = `https://cdn.discordapp.com/avatars/${discordId}/${discordUser.avatar}.${ext}?size=128`;
         }
 
+        const isAdmin = isUserAdmin(discordId);
+
+        // Revoke any existing sessions for this Discord user ID
+        for (const [t, s] of userSessions.entries()) {
+            if (String(s.userId) === discordId || String(s.discordId) === discordId) {
+                userSessions.delete(t);
+                activeSessions.delete(t);
+            }
+        }
+
+        const userToken = crypto.randomBytes(32).toString('hex');
+        const userObj = {
+            id: discordId,
+            username: username,
+            displayName: displayName,
+            avatarUrl: avatarUrl,
+            discordId: discordId,
+            loginTime: Date.now(),
+            isAdmin: isAdmin
+        };
+
+        const newSession = {
+            token: userToken,
+            userId: discordId,
+            username: username,
+            displayName: displayName,
+            avatarUrl: avatarUrl,
+            discordId: discordId,
+            loginTime: Date.now(),
+            expiresAt: Date.now() + SESSION_TTL_MS,
+            isAdmin: isAdmin
+        };
+        persistSession(newSession);
+
+        if (isAdmin) {
+            activeSessions.add(userToken);
+        }
+        setSessionCookie(req, res, userToken);
+
         const discordData = {
-            discordId: discordUser.id,
-            discordUsername: discordUser.global_name || discordUser.username,
+            discordId: discordId,
+            discordUsername: displayName,
             discordAvatar: avatarUrl,
             accessToken: tokenData.access_token,
             refreshToken: tokenData.refresh_token,
             expiresAt: Date.now() + (tokenData.expires_in * 1000)
         };
+        saveDiscordLinkForUser(discordId, discordData);
 
-        saveDiscordLinkForUser(stateData.userId, discordData);
-
-        res.redirect('/?discord_success=true');
+        const safeUserJson = encodeURIComponent(JSON.stringify(userObj));
+        return res.redirect(`/?discord_success=1&discord_token=${encodeURIComponent(userToken)}&discord_user=${safeUserJson}`);
     } catch (err) {
         console.error('[Discord OAuth] Callback exception:', err);
-        res.redirect('/?discord_error=server_error');
+        return res.redirect('/?discord_error=server_error');
     }
 });
 
@@ -1564,9 +1365,32 @@ app.post('/api/admin/discord-settings', requireAdmin, (req, res) => {
 
 /* ── Admin: get active sessions ──────────────────────────────────── */
 app.get('/api/admin/sessions', requireAdmin, (req, res) => {
-    const sessionsList = Array.from(userSessions.values())
-        .sort((a, b) => b.loginTime - a.loginTime);
-    res.json({ success: true, sessions: sessionsList });
+    // Deduplicate sessions so each user only appears once (keep the most recent session)
+    const sorted = Array.from(userSessions.values())
+        .filter(s => s && !isSessionExpired(s))
+        .sort((a, b) => (b.loginTime || 0) - (a.loginTime || 0));
+
+    const seenUsers = new Set();
+    const uniqueSessions = [];
+
+    for (const session of sorted) {
+        const uId = String(session.userId || session.discordId || '').trim();
+        const key = uId || session.token;
+        if (!seenUsers.has(key)) {
+            seenUsers.add(key);
+            uniqueSessions.push(session);
+        } else {
+            // Prune duplicate session from memory
+            userSessions.delete(session.token);
+            activeSessions.delete(session.token);
+        }
+    }
+
+    if (uniqueSessions.length !== sorted.length) {
+        saveSessionsToDisk();
+    }
+
+    res.json({ success: true, sessions: uniqueSessions });
 });
 
 /* ── Admin: get blocklist ────────────────────────────────────────── */
@@ -1577,49 +1401,41 @@ app.get('/api/admin/blocked', requireAdmin, (req, res) => {
 /* ── Admin: block a user ─────────────────────────────────────────── */
 app.post('/api/admin/block', requireAdmin, async (req, res) => {
     const { userId } = req.body || {};
-    if (!userId) return res.json({ success: false, message: 'Username or User ID is required.' });
+    if (!userId) return res.json({ success: false, message: 'Discord ID or Username is required.' });
 
     try {
-        let targetUserId = null;
-        let targetUsername = null;
-        let targetDisplayName = null;
-        let targetAvatarUrl = null;
+        const cleanId = String(userId).replace(/[<@!>]/g, '').trim();
+        let targetUserId = cleanId;
+        let targetUsername = cleanId;
+        let targetDisplayName = cleanId;
+        let targetAvatarUrl = 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-        const isNumeric = /^\d+$/.test(String(userId).trim());
+        const isNumericId = /^\d{17,20}$/.test(cleanId);
 
-        if (isNumeric) {
-            targetUserId = Number(userId);
-            try {
-                const profile = await httpsGet(`https://users.roblox.com/v1/users/${targetUserId}`);
-                targetUsername = profile.name;
-                targetDisplayName = profile.displayName;
-            } catch (err) {
-                targetUsername = `User #${targetUserId}`;
-                targetDisplayName = `User #${targetUserId}`;
+        if (isNumericId) {
+            const botToken = (process.env.DISCORD_BOT_TOKEN || '').trim();
+            if (botToken) {
+                try {
+                    const userRes = await httpsRequest(`https://discord.com/api/v10/users/${cleanId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bot ${botToken}`,
+                            'User-Agent': 'HCValues/1.0'
+                        }
+                    });
+                    if (userRes.statusCode === 200 && userRes.body && userRes.body.id) {
+                        const u = userRes.body;
+                        targetUsername = u.username || targetUsername;
+                        targetDisplayName = u.global_name || u.username || targetDisplayName;
+                        if (u.avatar) {
+                            const ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
+                            targetAvatarUrl = `https://cdn.discordapp.com/avatars/${cleanId}/${u.avatar}.${ext}?size=128`;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[admin/block] Discord user lookup error:', e.message);
+                }
             }
-        } else {
-            // It's a username, resolve it!
-            const search = await httpsPost(
-                'https://users.roblox.com/v1/usernames/users',
-                { usernames: [String(userId).trim()], excludeBannedUsers: false }
-            );
-            if (search.data && search.data.length > 0) {
-                targetUserId = search.data[0].id;
-                targetUsername = search.data[0].name;
-                targetDisplayName = search.data[0].displayName;
-            } else {
-                return res.json({ success: false, message: `Roblox user "${userId}" not found.` });
-            }
-        }
-
-        // Get avatar url
-        if (targetUserId) {
-            try {
-                const av = await httpsGet(
-                    `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${targetUserId}&size=150x150&format=Png&isCircular=false`
-                );
-                targetAvatarUrl = av.data?.[0]?.imageUrl || null;
-            } catch (_) {}
         }
 
         const blocklist = loadJSON(BLOCKLIST_FILE, []);
@@ -1628,16 +1444,18 @@ app.post('/api/admin/block', requireAdmin, async (req, res) => {
         let filtered = blocklist.filter(item => {
             if (!item) return false;
             if (typeof item === 'object') {
-                return Number(item.userId) !== Number(targetUserId);
+                return String(item.userId) !== String(targetUserId) &&
+                       String(item.username || '').toLowerCase() !== String(targetUsername).toLowerCase();
             }
-            return Number(item) !== Number(targetUserId) && String(item) !== String(targetUserId) && String(item).toLowerCase() !== String(targetUsername).toLowerCase();
+            return String(item) !== String(targetUserId) &&
+                   String(item).toLowerCase() !== String(targetUsername).toLowerCase();
         });
 
         const newBlockItem = {
             userId: targetUserId,
             username: targetUsername,
             displayName: targetDisplayName,
-            avatarUrl: targetAvatarUrl || 'assets/placeholder-roblox.png',
+            avatarUrl: targetAvatarUrl,
             blockedAt: new Date().toISOString()
         };
 
@@ -1647,7 +1465,9 @@ app.post('/api/admin/block', requireAdmin, async (req, res) => {
         // Clear any active sessions for the blocked user
         let sessionModified = false;
         for (const [token, session] of userSessions.entries()) {
-            if (Number(session.userId) === Number(targetUserId)) {
+            if (String(session.userId) === String(targetUserId) ||
+                String(session.discordId) === String(targetUserId) ||
+                String(session.username || '').toLowerCase() === String(targetUsername).toLowerCase()) {
                 userSessions.delete(token);
                 activeSessions.delete(token);
                 sessionModified = true;
@@ -1668,13 +1488,14 @@ app.post('/api/admin/unblock', requireAdmin, (req, res) => {
     const { userId } = req.body || {};
     if (!userId) return res.json({ success: false, message: 'userId is required.' });
 
+    const target = String(userId).trim();
     let list = loadJSON(BLOCKLIST_FILE, []);
     list = list.filter(item => {
         if (!item) return false;
         if (typeof item === 'object') {
-            return Number(item.userId) !== Number(userId);
+            return String(item.userId) !== target && String(item.username || '').toLowerCase() !== target.toLowerCase();
         }
-        return Number(item) !== Number(userId) && String(item) !== String(userId);
+        return String(item) !== target && String(item).toLowerCase() !== target.toLowerCase();
     });
     saveJSON(BLOCKLIST_FILE, list);
     res.json({ success: true, blocked: list });
@@ -1719,7 +1540,7 @@ app.get('/api/admin/vote-result', requireAdmin, (req, res) => {
         return res.status(403).json({ success: false, message: 'Forbidden: Admin access required.' });
     }
     const session = userSessions.get(token);
-    if (Number(session.userId) !== ADMIN_USER_ID) {
+    if (!isUserAdmin(session.userId)) {
         return res.status(403).json({ success: false, message: 'Forbidden: Owner access only.' });
     }
 
@@ -1774,9 +1595,10 @@ function getUtcDay(date) {
 
 function countDailyVotes(all, userId) {
     const today = getUtcDay(new Date());
+    const strUserId = String(userId);
     return all.reduce((count, entry) => {
         if (!entry.votes || !Array.isArray(entry.votes)) return count;
-        return count + entry.votes.filter(v => Number(v.userId) === Number(userId) && getUtcDay(v.submittedAt) === today).length;
+        return count + entry.votes.filter(v => String(v.userId) === strUserId && getUtcDay(v.submittedAt) === today).length;
     }, 0);
 }
 
@@ -1793,7 +1615,7 @@ app.get('/api/votes', requireDataAccess, (req, res) => {
     let userVote = null;
     if (token && userSessions.has(token)) {
         const session = userSessions.get(token);
-        const v = (entry.votes || []).find(x => Number(x.userId) === Number(session.userId));
+        const v = (entry.votes || []).find(x => String(x.userId) === String(session.userId));
         if (v) userVote = v.vote;
     }
 
@@ -1818,14 +1640,14 @@ app.post('/api/vote', (req, res) => {
         all.push(entry);
     }
 
-    const userId = Number(session.userId);
-    const existingIdx = (entry.votes || []).findIndex(v => Number(v.userId) === userId);
+    const userId = String(session.userId);
+    const existingIdx = (entry.votes || []).findIndex(v => String(v.userId) === userId);
     const existingVote = existingIdx !== -1 ? entry.votes[existingIdx] : null;
 
     const dailyCount = countDailyVotes(all, userId);
     const voteIsNew = existingVote ? false : true;
-    // Hardcoded admin user gets unlimited votes — enforced server-side, not bypassable from frontend
-    const isUnlimitedVoter = userId === ADMIN_USER_ID;
+    // Admin users get unlimited votes — enforced server-side, not bypassable from frontend
+    const isUnlimitedVoter = isUserAdmin(userId);
     if (voteIsNew && !isUnlimitedVoter && dailyCount >= 5) {
         return res.status(429).json({ success: false, message: 'Daily vote limit reached. You can vote up to 5 times per day.' });
     }
@@ -1870,12 +1692,12 @@ app.get('/api/prices/check', (req, res) => {
             return res.json({ success: false, allowed: false, isAdmin: false });
         }
         
-        if (Number(session.userId) === ADMIN_USER_ID) {
+        if (isUserAdmin(session.userId)) {
             return res.json({ success: true, allowed: true, isAdmin: true });
         }
         
         const whitelist = loadJSON(PRICES_WHITELIST_FILE, []);
-        const isWhitelisted = whitelist.some(item => Number(item.userId) === Number(session.userId));
+        const isWhitelisted = whitelist.some(item => String(item.userId) === String(session.userId) || (item.username && String(item.username).toLowerCase() === String(session.username).toLowerCase()));
         if (isWhitelisted) {
             return res.json({ success: true, allowed: true, isAdmin: false });
         }
@@ -1905,61 +1727,57 @@ app.get('/api/prices/public-whitelist', (req, res) => {
 /* ── Prices Whitelist: add (Admin only) ───────────────────────────── */
 app.post('/api/prices/whitelist/add', requireAdmin, async (req, res) => {
     const { userId } = req.body || {};
-    if (!userId) return res.json({ success: false, message: 'Username or User ID is required.' });
+    if (!userId) return res.json({ success: false, message: 'Discord ID or Username is required.' });
 
     try {
-        let targetUserId = null;
-        let targetUsername = null;
-        let targetDisplayName = null;
-        let targetAvatarUrl = null;
+        const cleanId = String(userId).replace(/[<@!>]/g, '').trim();
+        let targetUserId = cleanId;
+        let targetUsername = cleanId;
+        let targetDisplayName = cleanId;
+        let targetAvatarUrl = 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-        const isNumeric = /^\d+$/.test(String(userId).trim());
+        const isNumeric = /^\d{17,20}$/.test(cleanId);
 
         if (isNumeric) {
-            targetUserId = Number(userId);
-            try {
-                const profile = await httpsGet(`https://users.roblox.com/v1/users/${targetUserId}`);
-                targetUsername = profile.name;
-                targetDisplayName = profile.displayName;
-            } catch (err) {
-                targetUsername = `User #${targetUserId}`;
-                targetDisplayName = `User #${targetUserId}`;
+            const botToken = (process.env.DISCORD_BOT_TOKEN || '').trim();
+            if (botToken) {
+                try {
+                    const userRes = await httpsRequest(`https://discord.com/api/v10/users/${cleanId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bot ${botToken}`,
+                            'User-Agent': 'HCValues/1.0'
+                        }
+                    });
+                    if (userRes.statusCode === 200 && userRes.body && userRes.body.id) {
+                        const u = userRes.body;
+                        targetUsername = u.username || targetUsername;
+                        targetDisplayName = u.global_name || u.username || targetDisplayName;
+                        if (u.avatar) {
+                            const ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
+                            targetAvatarUrl = `https://cdn.discordapp.com/avatars/${cleanId}/${u.avatar}.${ext}?size=128`;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[prices/whitelist/add] Discord lookup error:', e.message);
+                }
             }
-        } else {
-            // Username lookup
-            const search = await httpsPost(
-                'https://users.roblox.com/v1/usernames/users',
-                { usernames: [String(userId).trim()], excludeBannedUsers: false }
-            );
-            if (search.data && search.data.length > 0) {
-                targetUserId = search.data[0].id;
-                targetUsername = search.data[0].name;
-                targetDisplayName = search.data[0].displayName;
-            } else {
-                return res.json({ success: false, message: `Roblox user "${userId}" not found.` });
-            }
-        }
-
-        // Get avatar url
-        if (targetUserId) {
-            try {
-                const av = await httpsGet(
-                    `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${targetUserId}&size=150x150&format=Png&isCircular=false`
-                );
-                targetAvatarUrl = av.data?.[0]?.imageUrl || null;
-            } catch (_) {}
         }
 
         const whitelist = loadJSON(PRICES_WHITELIST_FILE, []);
         
-        // Remove existing duplicates
-        let filtered = whitelist.filter(item => Number(item.userId) !== Number(targetUserId));
+        // Remove existing duplicates (compare as strings)
+        let filtered = whitelist.filter(item => {
+            if (!item) return false;
+            return String(item.userId) !== String(targetUserId) &&
+                   String(item.username || '').toLowerCase() !== String(targetUsername).toLowerCase();
+        });
 
         const newPlaylistItem = {
             userId: targetUserId,
             username: targetUsername,
             displayName: targetDisplayName,
-            avatarUrl: targetAvatarUrl || 'assets/placeholder-roblox.png',
+            avatarUrl: targetAvatarUrl,
             addedAt: new Date().toISOString()
         };
 
@@ -1977,8 +1795,12 @@ app.post('/api/prices/whitelist/remove', requireAdmin, (req, res) => {
     const { userId } = req.body || {};
     if (!userId) return res.json({ success: false, message: 'userId is required.' });
 
+    const target = String(userId).trim();
     let list = loadJSON(PRICES_WHITELIST_FILE, []);
-    list = list.filter(item => Number(item.userId) !== Number(userId));
+    list = list.filter(item => {
+        if (!item) return false;
+        return String(item.userId) !== target && String(item.username || '').toLowerCase() !== target.toLowerCase();
+    });
     saveJSON(PRICES_WHITELIST_FILE, list);
     res.json({ success: true, whitelist: list });
 });
@@ -1988,12 +1810,12 @@ app.get('/api/prices/suggestions', requirePricesAccess, (req, res) => {
     const suggestions = loadJSON(PRICE_SUGGESTIONS_FILE, []);
     const session = req.userSession;
     
-    if (Number(session.userId) === ADMIN_USER_ID) {
+    if (isUserAdmin(session.userId)) {
         // Return all suggestions for the owner
         return res.json({ success: true, suggestions });
     } else {
         // Return only suggestions made by the current user
-        const userSuggestions = suggestions.filter(s => Number(s.userId) === Number(session.userId));
+        const userSuggestions = suggestions.filter(s => String(s.userId) === String(session.userId));
         return res.json({ success: true, suggestions: userSuggestions });
     }
 });

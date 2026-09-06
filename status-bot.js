@@ -1,6 +1,6 @@
 // status-bot.js — HC Value Discord Status Bot & Token Generator
 // 1. Renames a voice channel to 🟢 or 🔴 based on whether the site is up
-// 2. Listens for ,ctoken <roblox user or id> <discord id> in your server to generate manual login tokens
+// 2. Listens for ,ctoken <discord id or @mention> in your server to generate manual login tokens
 
 require('dotenv').config();
 const https = require('https');
@@ -16,7 +16,7 @@ const SITE_URL            = process.env.SITE_URL || 'https://hcvalue-site-produc
 const PORT                = process.env.PORT || 8000;
 const INTERNAL_SERVER_URL = process.env.INTERNAL_SERVER_URL || `http://localhost:${PORT}`;
 const REQUIRED_ROLE_ID    = '1533700275028627636'; // Only members with this role can generate
-const ADMIN_USER_ID       = 1945506007;            // Site owner/admin Roblox ID
+const ADMIN_DISCORD_ID    = process.env.ADMIN_DISCORD_ID || '1512110331718013121'; // Site owner/admin Discord ID
 const SESSION_TTL_MS      = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // ── Storage Paths (mirroring server.js DATA_DIR) ─────────────────────────────
@@ -141,59 +141,16 @@ function httpsPost(url, body) {
     });
 }
 
-// ── Roblox Profile & Avatar Lookup ───────────────────────────────────────────
-async function resolveRobloxUser(input) {
-    const trimmed = String(input || '').trim();
-    if (!trimmed) return null;
-
-    // If numeric, try user ID lookup first
-    if (/^\d+$/.test(trimmed)) {
-        try {
-            const data = await httpsGet(`https://users.roblox.com/v1/users/${trimmed}`);
-            if (data && data.id) {
-                return {
-                    id: data.id,
-                    name: data.name,
-                    displayName: data.displayName || data.name
-                };
-            }
-        } catch (_) {}
+// ── Discord User Lookup & Avatar Extraction ──────────────────────────────────
+function getDiscordAvatarUrl(discordUser) {
+    if (discordUser && discordUser.avatar) {
+        const ext = discordUser.avatar.startsWith('a_') ? 'gif' : 'png';
+        return `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.${ext}?size=128`;
     }
-
-    // Try username lookup
-    try {
-        const search = await httpsPost('https://users.roblox.com/v1/usernames/users', {
-            usernames: [trimmed],
-            excludeBannedUsers: false
-        });
-        if (search && search.data && search.data.length > 0) {
-            const u = search.data[0];
-            return {
-                id: u.id,
-                name: u.name,
-                displayName: u.displayName || u.name
-            };
-        }
-    } catch (e) {
-        console.warn('[Roblox] Username lookup failed:', e.message);
-    }
-
-    return null;
+    const idx = discordUser && discordUser.id ? Number((BigInt(discordUser.id) >> 22n) % 6n) : 0;
+    return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
 }
 
-async function fetchRobloxAvatar(userId) {
-    try {
-        const av = await httpsGet(
-            `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-        );
-        if (av && av.data && av.data[0] && av.data[0].imageUrl) {
-            return av.data[0].imageUrl;
-        }
-    } catch (_) {}
-    return 'https://www.roblox.com/headshot-thumbnail/image?userId=' + userId + '&width=150&height=150&format=png';
-}
-
-// ── Discord User Lookup & First Name Extraction ──────────────────────────────
 async function fetchDiscordUser(discordId) {
     try {
         return await discordRequest('GET', `/users/${discordId}`);
@@ -207,61 +164,60 @@ function extractFirstName(discordUser) {
     if (!discordUser) return 'there';
     const fullName = (discordUser.global_name || discordUser.username || '').trim();
     if (!fullName) return 'there';
-    // Get first word of display name (e.g. "will" from "will you come back?")
     const firstWord = fullName.split(/\s+/)[0];
     return firstWord || fullName;
 }
 
-// ── Token Generation Core ────────────────────────────────────────────────────
-async function generateToken(robloxInput, targetDiscordId) {
-    // 1. Resolve Roblox account (username or numeric ID)
-    const robloxUser = await resolveRobloxUser(robloxInput);
-    if (!robloxUser) {
+// ── Token Generation Core (Discord-only) ─────────────────────────────────────
+async function generateToken(targetDiscordId) {
+    // 1. Resolve Discord user via Discord Bot API
+    const discordUser = await fetchDiscordUser(targetDiscordId);
+    if (!discordUser || !discordUser.id) {
         return {
             success: false,
-            message: `Roblox user "${robloxInput}" could not be found. Check username or ID.`
+            message: `Discord user "${targetDiscordId}" could not be found via Discord API. Make sure the ID is correct.`
         };
     }
+
+    const discordUsername = discordUser.username || '';
+    const displayName = discordUser.global_name || discordUser.username || targetDiscordId;
+    const firstName = extractFirstName(discordUser);
 
     // 2. Block check
-    if (isUserBlocked(robloxUser.id, robloxUser.name)) {
+    if (isUserBlocked(discordUser.id, discordUsername)) {
         return {
             success: false,
-            message: `User "${robloxUser.name}" (ID: ${robloxUser.id}) is on the blocklist.`
+            message: `User "${discordUsername}" (ID: ${discordUser.id}) is on the blocklist.`
         };
     }
 
-    // 3. Resolve Discord target user & ticket opener first name
-    const discordUser = await fetchDiscordUser(targetDiscordId);
-    const firstName = extractFirstName(discordUser);
-    const discordUsername = discordUser ? (discordUser.username || '') : '';
+    // 3. Fetch Discord avatar
+    const avatarUrl = getDiscordAvatarUrl(discordUser);
 
-    // 4. Fetch Roblox avatar
-    const avatarUrl = await fetchRobloxAvatar(robloxUser.id);
-
-    // 5. Generate secure 32-byte hex token
+    // 4. Generate secure 32-byte hex token
     const userToken = crypto.randomBytes(32).toString('hex');
-    const isAdmin = Number(robloxUser.id) === ADMIN_USER_ID;
+    const isAdmin = String(discordUser.id) === String(ADMIN_DISCORD_ID);
     const loginTime = Date.now();
     const expiresAt = loginTime + SESSION_TTL_MS;
 
     const newSession = {
         token: userToken,
-        userId: robloxUser.id,
-        username: robloxUser.name,
-        displayName: robloxUser.displayName,
+        userId: String(discordUser.id),
+        username: discordUsername,
+        displayName: displayName,
         avatarUrl: avatarUrl,
+        discordId: String(discordUser.id),
         loginTime: loginTime,
         expiresAt: expiresAt,
         isAdmin: isAdmin,
         manualToken: true
     };
 
-    // 6. Persist to sessions.json (replaces any previous session for this roblox user)
+    // 5. Persist to sessions.json (replaces any previous session for this discord user)
     try {
         const savedSessions = loadJSON(SESSIONS_FILE, []);
         const filtered = Array.isArray(savedSessions)
-            ? savedSessions.filter(s => Number(s?.userId) !== Number(robloxUser.id))
+            ? savedSessions.filter(s => String(s?.userId) !== String(discordUser.id) && String(s?.discordId) !== String(discordUser.id))
             : [];
         filtered.push(newSession);
         saveJSON(SESSIONS_FILE, filtered);
@@ -269,20 +225,16 @@ async function generateToken(robloxInput, targetDiscordId) {
         console.error('[Token] Failed to write sessions.json:', e);
     }
 
-    // 7. Persist to discord-links.json
+    // 6. Persist to discord-links.json
     try {
         const allLinks = loadJSON(DISCORD_LINKS_FILE, {});
-        const existing = allLinks[String(robloxUser.id)] || {};
-        allLinks[String(robloxUser.id)] = {
+        const existing = allLinks[String(discordUser.id)] || {};
+        allLinks[String(discordUser.id)] = {
             ...existing,
-            robloxUserId: robloxUser.id,
-            robloxUsername: robloxUser.name,
-            robloxDisplayName: robloxUser.displayName,
-            robloxAvatar: avatarUrl,
-            robloxLinkedAt: existing.robloxLinkedAt || new Date().toISOString(),
-            lastLoginAt: new Date().toISOString(),
-            discordId: String(targetDiscordId).trim(),
+            discordId: String(discordUser.id).trim(),
             discordUsername: discordUsername || existing.discordUsername || '',
+            discordAvatar: avatarUrl,
+            lastLoginAt: new Date().toISOString(),
             manualToken: true
         };
         saveJSON(DISCORD_LINKS_FILE, allLinks);
@@ -290,7 +242,7 @@ async function generateToken(robloxInput, targetDiscordId) {
         console.error('[Token] Failed to write discord-links.json:', e);
     }
 
-    // 8. Live sync with running server.js if available locally
+    // 7. Live sync with running server.js if available locally
     try {
         const syncData = JSON.stringify(newSession);
         const req = http.request(`${INTERNAL_SERVER_URL}/api/internal/session-sync`, {
@@ -306,7 +258,7 @@ async function generateToken(robloxInput, targetDiscordId) {
         req.end();
     } catch (_) {}
 
-    // 9. DM the ticket opener with their first name at the top
+    // 8. DM the user on Discord
     let dmSuccess = false;
     let dmError = null;
     try {
@@ -316,15 +268,15 @@ async function generateToken(robloxInput, targetDiscordId) {
             const dmEmbed = {
                 title: 'HC Values Login Token',
                 description: 'Here is your manual login token for **https://hcvalue.xyz**.\nCopy the token below and use the **"Have a token? Login here."** button on the website.',
-                color: 0xD97706,
+                color: 0x5865F2,
                 fields: [
                     {
                         name: 'Login Token',
                         value: `\`\`\`${userToken}\`\`\``
                     },
                     {
-                        name: 'Roblox Account',
-                        value: `**${robloxUser.name}**\nID: \`${robloxUser.id}\``,
+                        name: 'Discord Account',
+                        value: `**${displayName}** (@${discordUsername})\nID: \`${discordUser.id}\``,
                         inline: true
                     },
                     {
@@ -356,8 +308,9 @@ async function generateToken(robloxInput, targetDiscordId) {
     return {
         success: true,
         token: userToken,
-        robloxUser,
         discordUser,
+        displayName,
+        username: discordUsername,
         firstName,
         avatarUrl,
         expiresAt,
@@ -366,7 +319,7 @@ async function generateToken(robloxInput, targetDiscordId) {
     };
 }
 
-// ── Build Clean Channel Embed (Dark Orange, No Emojis, No Em-Dashes) ──────────
+// ── Build Clean Channel Embed ────────────────────────────────────────────────
 function buildChannelEmbed(result, targetDiscordId) {
     const expDate = new Date(result.expiresAt).toLocaleString('en-US', {
         month: 'numeric',
@@ -378,26 +331,17 @@ function buildChannelEmbed(result, targetDiscordId) {
         hour12: true
     });
 
-    const robloxValue = result.robloxUser.displayName && result.robloxUser.displayName !== result.robloxUser.name
-        ? `**${result.robloxUser.displayName}** (@${result.robloxUser.name})\nID: \`${result.robloxUser.id}\``
-        : `**${result.robloxUser.name}**\nID: \`${result.robloxUser.id}\``;
-
     return {
         title: 'Generated Login Token',
-        color: 0xD97706,
+        color: 0x5865F2,
         fields: [
             {
                 name: 'Token',
                 value: `\`\`\`${result.token}\`\`\``
             },
             {
-                name: 'Roblox User',
-                value: robloxValue,
-                inline: true
-            },
-            {
                 name: 'Discord User',
-                value: `<@${targetDiscordId}>\nID: \`${targetDiscordId}\``,
+                value: `<@${targetDiscordId}>\n**${result.displayName}** (@${result.username})\nID: \`${targetDiscordId}\``,
                 inline: true
             },
             {
@@ -550,26 +494,25 @@ async function handleMessageCreate(msg) {
         return;
     }
 
-    // Parse parameters: ,ctoken <roblox user or id> <discord id>
+    // Parse parameters: ,ctoken <discord id or @mention>
     const parts = content.split(/\s+/);
-    if (parts.length < 3) {
+    if (parts.length < 2) {
         try {
             await discordRequest('POST', `/channels/${channelId}/messages`, {
-                content: `**Invalid Usage:**\nFormat: \`,ctoken <roblox username or id> <discord id>\`\nExample: \`,ctoken Ionelyx_m 1512110331718013121\`\nNote: Roblox can be a username or ID. Discord must be the numeric User ID.`,
+                content: `**Invalid Usage:**\nFormat: \`,ctoken <discord id or @mention>\`\nExample: \`,ctoken 1512110331718013121\` or \`,ctoken @User\`\nNote: Discord must be the numeric User ID or a direct user mention.`,
                 message_reference: { message_id: msg.id }
             });
         } catch (_) {}
         return;
     }
 
-    const robloxInput = parts[1];
-    const rawDiscordId = parts[2];
+    const rawDiscordId = parts[1];
     const cleanDiscordId = rawDiscordId.replace(/[<@!>]/g, '').trim();
 
     if (!/^\d{17,20}$/.test(cleanDiscordId)) {
         try {
             await discordRequest('POST', `/channels/${channelId}/messages`, {
-                content: `**Invalid Discord ID:** "${rawDiscordId}". You must provide ONLY the numeric Discord User ID.`,
+                content: `**Invalid Discord ID:** "${rawDiscordId}". You must provide ONLY a numeric Discord User ID or user mention.`,
                 message_reference: { message_id: msg.id }
             });
         } catch (_) {}
@@ -577,7 +520,7 @@ async function handleMessageCreate(msg) {
     }
 
     // Execute token generation
-    const result = await generateToken(robloxInput, cleanDiscordId);
+    const result = await generateToken(cleanDiscordId);
 
     if (!result.success) {
         try {
