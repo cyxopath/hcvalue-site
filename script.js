@@ -99,7 +99,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     user: discordUserParam
                 }, '*');
             } catch (_) {}
-            renderAuthCallbackNotice('Connected to Discord!', 'Discord account connected. Closing tab...', true);
+            const joinedParam = urlParams.get('joined');
+            const noticeTitle = joinedParam === '1' ? 'Verified & Joined Server!' : 'Connected to Discord!';
+            const noticeDesc = joinedParam === '1' ? 'Successfully joined the Discord server & authenticated. Closing tab...' : 'Discord account connected. Closing tab...';
+            renderAuthCallbackNotice(noticeTitle, noticeDesc, true);
             setTimeout(() => { window.close(); }, 700);
             return;
         }
@@ -1154,35 +1157,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.currentStep = step;
 
             const row1 = document.getElementById('auth-step-row-1');
-            const row2 = document.getElementById('auth-step-row-2');
-
             const btnDiscord = document.getElementById('btn-auth-discord') || document.getElementById('btn-connect-discord-oauth');
             const chipDiscord = document.getElementById('auth-step-1-completed');
             const avatarDiscord = document.getElementById('auth-discord-avatar');
             const nameDiscord = document.getElementById('auth-discord-name');
 
-            const btnJoin = document.getElementById('btn-join-discord-server');
-            const btnCheck = document.getElementById('btn-check-discord-membership');
-            const chipServer = document.getElementById('auth-step-2-completed');
-            const pollNotice = document.getElementById('auth-card-poll-notice');
+            if (row1) row1.className = 'auth-step-row active';
 
-            // Reset rows
-            [row1, row2].forEach(r => { if (r) r.className = 'auth-step-row'; });
-
-            // STEP 1 State (Connect Discord)
-            if (step === 1) {
-                if (row1) row1.classList.add('active');
+            if (!user && !discord?.connected) {
                 if (btnDiscord) btnDiscord.style.display = 'inline-flex';
                 if (chipDiscord) chipDiscord.style.display = 'none';
-
-                if (row2) row2.classList.add('locked');
-                if (btnJoin) btnJoin.classList.add('disabled');
-                if (btnCheck) { btnCheck.classList.add('disabled'); btnCheck.style.display = 'none'; }
-                if (chipServer) chipServer.style.display = 'none';
-                if (pollNotice) pollNotice.style.display = 'none';
-            } else if (step === 2) {
-                // Step 1 Completed
-                if (row1) row1.classList.add('completed');
+            } else {
                 if (btnDiscord) btnDiscord.style.display = 'none';
                 if (chipDiscord) {
                     chipDiscord.style.display = 'flex';
@@ -1191,19 +1176,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (avatarDiscord) avatarDiscord.src = av;
                     if (nameDiscord) nameDiscord.textContent = `@${name}`;
                 }
-
-                // Step 2 Active (Join Discord Server)
-                if (row2) row2.classList.add('active');
-                if (btnJoin) {
-                    btnJoin.classList.remove('disabled');
-                    if (discord && discord.inviteLink) btnJoin.href = discord.inviteLink;
-                }
-                if (btnCheck) {
-                    btnCheck.classList.remove('disabled');
-                    btnCheck.style.display = 'inline-flex';
-                }
-                if (chipServer) chipServer.style.display = 'none';
-                if (pollNotice) pollNotice.style.display = 'flex';
             }
         },
 
@@ -3236,7 +3208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return true;
         }
 
-        // Step 1: Discord not yet connected
+        // Discord not yet connected
         if (!user || !discord.connected) {
             stopDiscordPolling();
             document.getElementById('page-wrapper').style.display = 'none';
@@ -3246,20 +3218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return false;
         }
 
-        // Step 2: Not yet in server
-        if (!discord.inServer) {
-            document.getElementById('page-wrapper').style.display = 'none';
-            document.getElementById('dynamic-island').style.display = 'none';
-
-            AuthWizard.open(2, user, discord);
-
-            if (!discordPollInterval) {
-                discordPollInterval = setInterval(checkDiscordMembershipNow, 5000);
-            }
-            return false;
-        }
-
-        // All steps complete → close wizard, show site
+        // Discord connected & authenticated → close wizard, show site
         stopDiscordPolling();
         AuthWizard.close();
         document.getElementById('page-wrapper').style.display = 'block';

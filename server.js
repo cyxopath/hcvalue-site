@@ -643,10 +643,12 @@ function getDiscordConfig() {
     const siteData = loadJSON(DATA_FILE, {});
     const cfg = siteData.config || {};
     const hasOAuthKeys = Boolean((process.env.DISCORD_CLIENT_ID || '').trim() && (process.env.DISCORD_CLIENT_SECRET || '').trim());
+    const guildId = (process.env.DISCORD_GUILD_ID || cfg.discordGuildId || '1405216941383094376').trim();
+    const inviteLink = (process.env.DISCORD_INVITE_LINK || cfg.discordInviteLink || 'https://discord.gg/PQPM4sYBc4').trim();
     return {
         enabled: (cfg.discordEnabled !== undefined ? Boolean(cfg.discordEnabled) : true) && hasOAuthKeys,
-        guildId: String(cfg.discordGuildId || '1405216941383094376').trim(),
-        inviteLink: String(cfg.discordInviteLink || 'https://discord.gg/PQPM4sYBc4').trim()
+        guildId: String(guildId),
+        inviteLink: String(inviteLink)
     };
 }
 
@@ -828,6 +830,47 @@ async function verifyDiscordGuildMembership(discordUserId, accessToken, guildId)
     return false;
 }
 
+async function autoJoinDiscordGuild(guildId, discordUserId, accessToken) {
+    if (!guildId || !discordUserId || !accessToken) {
+        return { success: false, reason: 'missing_parameters' };
+    }
+    const botToken = (process.env.DISCORD_BOT_TOKEN || '').trim();
+    if (!botToken) {
+        console.warn('[Discord Auto-Join] Bot token (DISCORD_BOT_TOKEN) is not configured.');
+        return { success: false, reason: 'missing_bot_token' };
+    }
+
+    try {
+        const payload = JSON.stringify({ access_token: accessToken });
+        const res = await httpsRequest(`https://discord.com/api/v10/guilds/${guildId}/members/${discordUserId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload),
+                'User-Agent': 'HCValues/1.0'
+            },
+            body: payload
+        });
+
+        // 201 Created = user was newly added to the server
+        // 204 No Content = user is already a member of the server
+        if (res.statusCode === 201) {
+            console.log(`[Discord Auto-Join] User ${discordUserId} was successfully joined to guild ${guildId} (201 Created)`);
+            return { success: true, joined: true, alreadyMember: false, status: 201 };
+        } else if (res.statusCode === 204) {
+            console.log(`[Discord Auto-Join] User ${discordUserId} is already in guild ${guildId} (204 No Content)`);
+            return { success: true, joined: true, alreadyMember: true, status: 204 };
+        } else {
+            console.warn(`[Discord Auto-Join] Guild join for ${discordUserId} in guild ${guildId} returned status ${res.statusCode}:`, res.body);
+            return { success: false, status: res.statusCode, body: res.body };
+        }
+    } catch (e) {
+        console.error(`[Discord Auto-Join] Exception joining user ${discordUserId} to guild ${guildId}:`, e.message || e);
+        return { success: false, error: e.message || e };
+    }
+}
+
 /* ── Roblox & Discord: validate user session ───────────────────────── */
 app.post('/api/validate-session', async (req, res) => {
     const token = getRequestSessionToken(req);
@@ -877,7 +920,13 @@ app.post('/api/validate-session', async (req, res) => {
                 discordStatus.connected = false;
                 discordStatus.inServer = false;
             } else if (discordUser) {
-                const isMember = await verifyDiscordGuildMembership(link.discordId, link.accessToken, discordCfg.guildId);
+                let isMember = await verifyDiscordGuildMembership(link.discordId, link.accessToken, discordCfg.guildId);
+                if (!isMember) {
+                    const joinRes = await autoJoinDiscordGuild(discordCfg.guildId, link.discordId, link.accessToken);
+                    if (joinRes.success) {
+                        isMember = true;
+                    }
+                }
                 discordStatus.connected = true;
                 discordStatus.inServer = isMember;
                 discordStatus.discordId = link.discordId;
@@ -1143,11 +1192,12 @@ app.get('/api/auth/discord/login', (req, res) => {
 
     const state = crypto.randomBytes(24).toString('hex');
     discordStates.set(state, {
+        userToken: (req.query.token || '').trim(),
         expiresAt: Date.now() + 10 * 60 * 1000
     });
 
     console.log(`[Discord OAuth] Login initiating with redirectUri: ${redirectUri}`);
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds&state=${state}&prompt=consent`;
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds%20guilds.join&state=${state}&prompt=consent`;
     res.redirect(discordAuthUrl);
 });
 
@@ -1229,6 +1279,19 @@ app.get('/api/auth/discord/callback', async (req, res) => {
             return res.redirect('/?discord_error=blacklisted');
         }
 
+        // Auto-join Discord guild if configured
+        const discordCfg = getDiscordConfig();
+        let inGuild = false;
+        if (discordCfg.guildId) {
+            const joinRes = await autoJoinDiscordGuild(discordCfg.guildId, discordId, accessToken);
+            if (joinRes.success) {
+                inGuild = true;
+            } else {
+                inGuild = await verifyDiscordGuildMembership(discordId, accessToken, discordCfg.guildId);
+            }
+            console.log(`[Discord OAuth] User ${discordId} (${username}) guild status: ${inGuild ? 'IN GUILD' : 'NOT IN GUILD'}`);
+        }
+
         let avatarUrl = 'https://cdn.discordapp.com/embed/avatars/0.png';
         if (discordUser.avatar) {
             const ext = discordUser.avatar.startsWith('a_') ? 'gif' : 'png';
@@ -1245,7 +1308,11 @@ app.get('/api/auth/discord/callback', async (req, res) => {
             }
         }
 
-        const userToken = crypto.randomBytes(32).toString('hex');
+        let userToken = crypto.randomBytes(32).toString('hex');
+        if (stateData && stateData.userToken && userSessions.has(stateData.userToken)) {
+            userToken = stateData.userToken;
+        }
+
         const userObj = {
             id: discordId,
             username: username,
@@ -1285,7 +1352,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
         saveDiscordLinkForUser(discordId, discordData);
 
         const safeUserJson = encodeURIComponent(JSON.stringify(userObj));
-        return res.redirect(`/?discord_success=1&discord_token=${encodeURIComponent(userToken)}&discord_user=${safeUserJson}`);
+        return res.redirect(`/?discord_success=1&discord_token=${encodeURIComponent(userToken)}&discord_user=${safeUserJson}&joined=${inGuild ? '1' : '0'}`);
     } catch (err) {
         console.error('[Discord OAuth] Callback exception:', err);
         return res.redirect('/?discord_error=server_error');
@@ -1305,7 +1372,8 @@ app.post('/api/discord/check-membership', async (req, res) => {
         return res.json({ success: true, connected: true, inServer: true });
     }
 
-    const link = getDiscordLinkForUser(session.userId);
+    const discordId = session.discordId || session.userId;
+    const link = getDiscordLinkForUser(session.userId) || (discordId ? getDiscordLinkForUser(discordId) : null);
     if (!link || !link.accessToken) {
         return res.json({ success: true, connected: false, inServer: false });
     }
@@ -1316,7 +1384,16 @@ app.post('/api/discord/check-membership', async (req, res) => {
         return res.json({ success: true, connected: false, inServer: false, message: 'Discord authorization was revoked.' });
     }
 
-    const isMember = await verifyDiscordGuildMembership(link.discordId, link.accessToken, discordCfg.guildId);
+    let isMember = await verifyDiscordGuildMembership(link.discordId, link.accessToken, discordCfg.guildId);
+    if (!isMember) {
+        const joinRes = await autoJoinDiscordGuild(discordCfg.guildId, link.discordId, link.accessToken);
+        if (joinRes.success) {
+            isMember = true;
+        } else {
+            isMember = await verifyDiscordGuildMembership(link.discordId, link.accessToken, discordCfg.guildId);
+        }
+    }
+
     const serverInfo = await getDiscordServerInfo();
     res.json({
         success: true,
