@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TIER_ITEMS = [
         { 
             name: 'Tier 1 (Base Mod)', 
-            usd: ' N/A', 
+            usd: '1,500', 
             customIcon: true,
             customImg: 'images/Moderator.png',
             features: {
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         { 
             name: 'Tier 2', 
-            usd: ' N/A', 
+            usd: '3,000', 
             customIcon: true,
             customImg: 'images/Moderator.png',
             features: {
@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         { 
             name: 'Tier 3', 
-            usd: ' N/A', 
+            usd: '5,000', 
             customIcon: true,
             customImg: 'images/Moderator.png',
             features: {
@@ -2777,16 +2777,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isVerifiedOwner = isUserAdmin && currentUser && String(currentUser.id).trim() === PRIMARY_ADMIN_ID;
             document.body.classList.toggle('is-admin', !!isVerifiedOwner);
 
-            let discordBadgeHtml = '';
-            if (discordInfo && discordInfo.connected && discordInfo.discordUsername) {
-                discordBadgeHtml = `
-                    <div class="roblox-verified-badge discord-badge" style="margin-top: 0.25rem; color: #5865F2;">
-                        <svg width="12" height="12" viewBox="0 0 127.14 96.36" fill="currentColor">
-                            <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
-                        </svg> @${discordInfo.discordUsername}
-                    </div>
-                `;
-            }
+            const discordId = String(user.discordId || user.id || '').trim();
+            const rawDisplayName = String(user.displayName || '').trim();
+            const rawUsername = String(user.username || '').trim();
+            const effectiveDisplayName = (rawDisplayName && rawDisplayName !== '-' && rawDisplayName !== '—')
+                ? rawDisplayName
+                : (rawUsername ? `@${rawUsername}` : 'Discord User');
+
+            let discordCreatedStr = '';
+            try {
+                const cleanSnowflake = discordId.replace(/\D/g, '');
+                if (cleanSnowflake.length >= 16) {
+                    const ms = Number((BigInt(cleanSnowflake) >> 22n) + 1420070400000n);
+                    const d = new Date(ms);
+                    if (!isNaN(d.getTime())) {
+                        discordCreatedStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    }
+                }
+            } catch (_) {}
 
             navUserArea.innerHTML = `
                 <button class="donation-nav-btn" id="donation-open-btn">
@@ -2797,27 +2805,73 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </button>
                 <div class="user-profile-widget" id="user-profile-widget">
                     <div class="user-avatar-ring">
-                        <img class="user-avatar-img" src="${user.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${user.displayName}">
+                        <img class="user-avatar-img" src="${user.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${effectiveDisplayName}">
                     </div>
                     <div class="user-info-text">
-                        <span class="user-display-name">${user.displayName || user.username}</span>
-                        <span class="user-username">@${user.username}</span>
+                        <span class="user-display-name">${effectiveDisplayName}</span>
+                        <span class="user-username">@${rawUsername || 'user'}</span>
                     </div>
                     <span class="user-dropdown-arrow">&#9662;</span>
                     
                     <div class="user-dropdown-menu" id="user-dropdown-menu">
-                        <img class="user-dropdown-avatar" src="${user.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar">
-                        <div class="user-dropdown-name-wrap">
-                            <div class="user-dropdown-display-name">${user.displayName || user.username}</div>
-                            <div class="user-dropdown-username">@${user.username}</div>
-                            <div class="roblox-verified-badge discord-badge" style="margin-top: 0.25rem; color: #5865F2;">
-                                <svg width="12" height="12" viewBox="0 0 127.14 96.36" fill="currentColor">
-                                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
-                                </svg>
-                                <span>Verified Discord User</span>
+                        <div class="user-dropdown-banner"></div>
+                        <div class="user-dropdown-body">
+                            <div class="user-dropdown-avatar-wrap">
+                                <img class="user-dropdown-avatar" src="${user.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar">
+                                <span class="user-dropdown-status-dot" title="Connected & Online"></span>
                             </div>
+                            <div class="user-dropdown-name-wrap">
+                                <div class="user-dropdown-display-name">${effectiveDisplayName}</div>
+                                <div class="user-dropdown-username">@${rawUsername || 'user'}</div>
+                                <div class="user-dropdown-badge-row">
+                                    <span class="user-badge-chip discord">
+                                        <svg width="11" height="11" viewBox="0 0 127.14 96.36" fill="currentColor">
+                                            <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.1,46,96,53,91.08,65.69,84.69,65.69Z"/>
+                                        </svg> Verified
+                                    </span>
+                                    ${isVerifiedOwner ? '<span class="user-badge-chip admin">🛡️ Admin</span>' : ''}
+                                </div>
+                            </div>
+
+                            <div class="user-profile-details-card">
+                                ${discordId ? `
+                                    <div class="user-detail-item">
+                                        <span class="user-detail-label">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                            Discord ID
+                                        </span>
+                                        <button class="user-id-copy-btn" id="btn-copy-discord-id" data-id="${discordId}" title="Click to copy Discord ID">
+                                            <span class="copy-btn-text">${discordId.length > 12 ? discordId.slice(0, 5) + '...' + discordId.slice(-4) : discordId}</span>
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                        </button>
+                                    </div>
+                                ` : ''}
+                                ${discordCreatedStr ? `
+                                    <div class="user-detail-item">
+                                        <span class="user-detail-label">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                            Created
+                                        </span>
+                                        <span class="user-detail-val">${discordCreatedStr}</span>
+                                    </div>
+                                ` : ''}
+                                <div class="user-detail-item">
+                                    <span class="user-detail-label">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                        Server Status
+                                    </span>
+                                    <span class="user-detail-val" style="color: #4ade80; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #4ade80; display: inline-block;"></span>
+                                        In Server
+                                    </span>
+                                </div>
+                            </div>
+
+                            <button id="roblox-btn-logout" class="user-dropdown-btn danger">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Log Out
+                            </button>
                         </div>
-                        <button id="roblox-btn-logout" class="user-dropdown-btn danger" style="margin-top: 0.5rem;">Log Out</button>
                     </div>
                 </div>
             `;
@@ -2838,6 +2892,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 // Clicking inside the card doesn't close it
                 dropdown.addEventListener('click', (e) => e.stopPropagation());
+            }
+
+            // Wire up Copy Discord ID button
+            const copyIdBtn = document.getElementById('btn-copy-discord-id');
+            if (copyIdBtn) {
+                copyIdBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const fullId = copyIdBtn.getAttribute('data-id');
+                    if (fullId) {
+                        navigator.clipboard.writeText(fullId).then(() => {
+                            const textSpan = copyIdBtn.querySelector('.copy-btn-text');
+                            const orig = textSpan ? textSpan.textContent : '';
+                            if (textSpan) textSpan.textContent = 'Copied!';
+                            copyIdBtn.classList.add('copied');
+                            setTimeout(() => {
+                                if (textSpan) textSpan.textContent = orig;
+                                copyIdBtn.classList.remove('copied');
+                            }, 1500);
+                        }).catch(() => {});
+                    }
+                });
             }
             
             const logoutBtn = document.getElementById('roblox-btn-logout');
