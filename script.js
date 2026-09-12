@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TIER_ITEMS = [
         { 
             name: 'Tier 1 (Base Mod)', 
-            usd: '1,500', 
+            usd: '1.500', 
             customIcon: true,
             customImg: 'images/Moderator.png',
             features: {
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         { 
             name: 'Tier 2', 
-            usd: '3,000', 
+            usd: '3.000', 
             customIcon: true,
             customImg: 'images/Moderator.png',
             features: {
@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         { 
             name: 'Tier 3', 
-            usd: '5,000', 
+            usd: '5.000', 
             customIcon: true,
             customImg: 'images/Moderator.png',
             features: {
