@@ -3,7 +3,7 @@
    ─────────────────────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const PRIMARY_ADMIN_ID = '1512110331718013121';
+    const PRIMARY_ADMIN_ID = '1548279754908508283';
     
     /* ── URL Parameter Auto-Login, Roblox & Discord OAuth Notices ── */
     const urlParams = new URLSearchParams(window.location.search);
