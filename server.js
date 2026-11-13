@@ -13,7 +13,7 @@ const crypto  = require('crypto');
 
 const app  = express();
 const PORT = process.env.PORT || 8000;
-const PRIMARY_ADMIN_DISCORD_ID = '1512110331718013121';
+const PRIMARY_ADMIN_DISCORD_ID = '1548279754908508283';
 const ADMIN_DISCORD_ID = (process.env.ADMIN_DISCORD_ID || PRIMARY_ADMIN_DISCORD_ID).trim();
 const ALLOWED_ADMIN_IDS = new Set([PRIMARY_ADMIN_DISCORD_ID]);
 if (process.env.ADMIN_DISCORD_ID && process.env.ADMIN_DISCORD_ID.trim()) {
